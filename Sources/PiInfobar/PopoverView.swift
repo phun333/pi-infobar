@@ -158,20 +158,7 @@ struct PopoverView: View {
     // MARK: Footer
 
     private var footer: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("\(summary.daysActive) active days · \(Fmt.int(summary.totalMessages)) messages")
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
-
-            Divider().opacity(0.5)
-
-            MenuRow(title: "Quit", systemImage: "power", shortcut: "⌘Q", action: onQuit)
-                .padding(4)
-        }
+        MenuRow(title: "Quit", systemImage: "power", shortcut: "⌘Q", action: onQuit)
+            .padding(4)
     }
 }
