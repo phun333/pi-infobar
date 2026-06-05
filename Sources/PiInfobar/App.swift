@@ -61,10 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func updateTitle(cost: Double, loading: Bool) {
         guard let button = statusItem.button else { return }
-        let symbol = NSImage(systemSymbolName: "chart.bar.fill", accessibilityDescription: "Pi Stats")
-        symbol?.isTemplate = true
-        let config = NSImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
-        button.image = symbol?.withSymbolConfiguration(config)
+        button.image = PiLogoShape.menuBarImage(size: 14)
         button.imagePosition = .imageLeading
         if loading && cost == 0 {
             button.title = " …"

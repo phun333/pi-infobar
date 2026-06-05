@@ -56,9 +56,9 @@ struct PopoverView: View {
                     .fill(LinearGradient(colors: [Color(hex: 0x7C5CFF), Color(hex: 0x4D7CFF)],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
                     .frame(width: 26, height: 26)
-                Text("π")
-                    .font(.system(size: 15, weight: .bold, design: .serif))
-                    .foregroundStyle(.white)
+                PiLogoShape()
+                    .fill(.white, style: FillStyle(eoFill: true))
+                    .frame(width: 15, height: 15)
             }
             VStack(alignment: .leading, spacing: 0) {
                 Text("Pi Stats")
