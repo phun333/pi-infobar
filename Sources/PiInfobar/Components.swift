@@ -25,6 +25,47 @@ enum Fmt {
     }
 }
 
+// MARK: - Menu-style row (hover highlight + keyboard shortcut hint)
+
+struct MenuRow: View {
+    let title: String
+    var systemImage: String? = nil
+    var shortcut: String? = nil
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if let img = systemImage {
+                    Image(systemName: img)
+                        .font(.system(size: 11, weight: .semibold))
+                        .frame(width: 14)
+                }
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+                Spacer()
+                if let sc = shortcut {
+                    Text(sc)
+                        .font(.system(size: 11.5, weight: .medium))
+                        .foregroundStyle(hovering ? Color.white.opacity(0.85) : .secondary)
+                }
+            }
+            .foregroundStyle(hovering ? Color.white : Color.primary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(hovering ? Color.accentColor : Color.clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+    }
+}
+
 // MARK: - Stat card (Overview grid)
 
 struct StatCard: View {
@@ -55,11 +96,11 @@ struct StatCard: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.primary.opacity(0.06))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+                .strokeBorder(Color.primary.opacity(0.07), lineWidth: 1)
         )
     }
 }

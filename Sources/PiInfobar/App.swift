@@ -10,49 +10,139 @@ struct PiInfobarApp: App {
     }
 }
 
+/// Borderless panel that can take key focus (for ⌘Q / Esc) and shows a
+/// translucent, rounded dropdown — no popover triangle.
+final class StatsPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+}
+
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
-    private var popover: NSPopover!
+    private var panel: StatsPanel!
     private let engine = StatsEngine()
     private var refreshTimer: Timer?
-    private var titleObserver: AnyObject?
+    private var keyMonitor: Any?
+
+    private let panelSize = NSSize(width: 380, height: 560)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        // Status bar item.
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.action = #selector(togglePopover(_:))
+            button.action = #selector(togglePanel(_:))
             button.target = self
             updateTitle(cost: 0, loading: true)
         }
 
-        // Popover.
-        popover = NSPopover()
-        popover.contentSize = NSSize(width: 380, height: 560)
-        popover.behavior = .transient
-        popover.animates = true
-        let root = PopoverView(engine: engine, onQuit: { NSApp.terminate(nil) },
-                               onRefresh: { [weak self] in self?.engine.load(force: true) })
-        popover.contentViewController = NSHostingController(rootView: root)
+        buildPanel()
 
-        // Load data and keep the menu bar title in sync.
         engine.load()
-        observeEngine()
+        startTitleSync()
 
-        // Periodic refresh (every 5 minutes) to pick up new sessions.
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
-            self?.engine.load()
+            Task { @MainActor in self?.engine.load() }
         }
     }
 
-    private func observeEngine() {
-        // Poll the engine briefly to update the title (simple + robust).
+    // MARK: Panel construction
+
+    private func buildPanel() {
+        panel = StatsPanel(
+            contentRect: NSRect(origin: .zero, size: panelSize),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
+        panel.level = .popUpMenu
+        panel.isMovable = false
+        panel.hidesOnDeactivate = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        panel.animationBehavior = .utilityWindow
+
+        // Translucent rounded container.
+        let blur = NSVisualEffectView(frame: NSRect(origin: .zero, size: panelSize))
+        blur.material = .menu
+        blur.blendingMode = .behindWindow
+        blur.state = .active
+        blur.wantsLayer = true
+        blur.layer?.cornerRadius = 14
+        blur.layer?.cornerCurve = .continuous
+        blur.layer?.masksToBounds = true
+        blur.layer?.borderWidth = 1
+        blur.layer?.borderColor = NSColor.white.withAlphaComponent(0.08).cgColor
+
+        let root = PopoverView(engine: engine,
+                               onQuit: { NSApp.terminate(nil) },
+                               onRefresh: { [weak self] in self?.engine.load(force: true) })
+        let hosting = NSHostingView(rootView: root)
+        hosting.frame = blur.bounds
+        hosting.autoresizingMask = [.width, .height]
+        blur.addSubview(hosting)
+
+        panel.contentView = blur
+    }
+
+    // MARK: Show / hide
+
+    @objc private func togglePanel(_ sender: AnyObject?) {
+        if panel.isVisible { hidePanel() } else { showPanel() }
+    }
+
+    private func showPanel() {
+        guard let button = statusItem.button, let win = button.window else { return }
+        let rectInWindow = button.convert(button.bounds, to: nil)
+        let screenRect = win.convertToScreen(rectInWindow)
+
+        let gap: CGFloat = 6
+        var origin = NSPoint(x: screenRect.maxX - panelSize.width,
+                             y: screenRect.minY - panelSize.height - gap)
+        if let screen = win.screen ?? NSScreen.main {
+            let vf = screen.visibleFrame
+            origin.x = min(max(origin.x, vf.minX + 8), vf.maxX - panelSize.width - 8)
+        }
+
+        panel.setContentSize(panelSize)
+        panel.setFrameOrigin(origin)
+        NSApp.activate(ignoringOtherApps: true)
+        panel.makeKeyAndOrderFront(nil)
+
+        // Key handling (⌘Q, Esc) while the panel is up.
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return event }
+            if event.modifierFlags.contains(.command),
+               event.charactersIgnoringModifiers?.lowercased() == "q" {
+                NSApp.terminate(nil); return nil
+            }
+            if event.keyCode == 53 { self.hidePanel(); return nil } // Esc
+            return event
+        }
+
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(panelResignedKey),
+            name: NSWindow.didResignKeyNotification, object: panel)
+    }
+
+    @objc private func panelResignedKey() { hidePanel() }
+
+    private func hidePanel() {
+        if let m = keyMonitor { NSEvent.removeMonitor(m); keyMonitor = nil }
+        NotificationCenter.default.removeObserver(
+            self, name: NSWindow.didResignKeyNotification, object: panel)
+        panel.orderOut(nil)
+    }
+
+    // MARK: Menu bar title
+
+    private func startTitleSync() {
         Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self else { return }
             Task { @MainActor in
+                guard let self else { return }
                 self.updateTitle(cost: self.engine.todayCost, loading: self.engine.loading)
             }
         }
@@ -69,16 +159,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.title = String(format: " $%.2f", cost)
         }
         button.font = .monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
-    }
-
-    @objc private func togglePopover(_ sender: AnyObject?) {
-        guard let button = statusItem.button else { return }
-        if popover.isShown {
-            popover.performClose(sender)
-        } else {
-            NSApp.activate(ignoringOtherApps: true)
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
-        }
     }
 }

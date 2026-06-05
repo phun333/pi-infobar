@@ -44,7 +44,6 @@ struct PopoverView: View {
             footer
         }
         .frame(width: 380, height: 560)
-        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     // MARK: Header
@@ -157,18 +156,20 @@ struct PopoverView: View {
     // MARK: Footer
 
     private var footer: some View {
-        HStack {
-            Text("\(summary.daysActive) active days · \(Fmt.int(summary.totalMessages)) messages")
-                .font(.system(size: 10.5))
-                .foregroundStyle(.secondary)
-            Spacer()
-            Button(action: onQuit) {
-                Text("Quit").font(.system(size: 10.5, weight: .medium))
+        VStack(spacing: 0) {
+            HStack {
+                Text("\(summary.daysActive) active days · \(Fmt.int(summary.totalMessages)) messages")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary)
+                Spacer()
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+
+            Divider().opacity(0.5)
+
+            MenuRow(title: "Quit", systemImage: "power", shortcut: "⌘Q", action: onQuit)
+                .padding(4)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
     }
 }
