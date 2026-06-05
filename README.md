@@ -47,16 +47,32 @@ and token usage — all computed locally from your session logs. Nothing leaves 
 
 ## Download
 
-**[Download Pi Stats v0.1.0 →](https://github.com/phun333/pi-infobar/releases/tag/v0.1.0)**
+The app is **unsigned** (no paid Apple Developer account), so macOS quarantines it on
+download and may say *“Pi Stats is damaged and can’t be opened”*. That's Gatekeeper, not
+a broken app — you just have to clear the quarantine flag once.
 
-1. Open `Pi-Stats.dmg` and drag **Pi Stats** to **Applications**.
-2. The build is unsigned (no paid Apple account), so macOS quarantines it. Clear it once:
+### Easiest: one-line install
+
+Paste this into **Terminal** — it downloads, installs to Applications, unquarantines, and opens:
+
+```bash
+curl -L https://github.com/phun333/pi-infobar/releases/download/v0.1.0/Pi-Stats.zip -o /tmp/PiStats.zip && \
+  ditto -xk /tmp/PiStats.zip /Applications && \
+  xattr -dr com.apple.quarantine "/Applications/Pi Stats.app" && \
+  open "/Applications/Pi Stats.app"
+```
+
+### Manual
+
+1. Download **[`Pi-Stats.dmg`](https://github.com/phun333/pi-infobar/releases/tag/v0.1.0)**,
+   open it, drag **Pi Stats** into **Applications**. (If you already opened it and it got
+   moved to Trash, put it back in Applications first — don't double-click yet.)
+2. Run this once to clear the quarantine flag:
    ```bash
    xattr -dr com.apple.quarantine "/Applications/Pi Stats.app"
    ```
-   (Or: right-click the app → **Open**; on newer macOS, allow it under
-   **System Settings → Privacy & Security → Open Anyway**.)
-3. Launch it — the **π** mark appears in your menu bar. Universal binary (Apple Silicon + Intel).
+3. Now open it normally. The **π** mark appears in your menu bar.
+   Universal binary (Apple Silicon + Intel).
 
 ## How it works
 
