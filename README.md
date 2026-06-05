@@ -9,7 +9,7 @@
 See your total spend, the languages you actually code in, model costs, projects
 and token usage — all computed locally from your session logs. Nothing leaves your Mac.
 
-<a href="https://github.com/phun333/pi-infobar/releases/latest"><img src="https://img.shields.io/github/v/release/phun333/pi-infobar?style=flat-square&color=4D7CFF&label=download" alt="Latest release" /></a>
+<a href="https://github.com/phun333/pi-infobar/releases/tag/v0.1.0"><img src="https://img.shields.io/github/v/release/phun333/pi-infobar?style=flat-square&color=4D7CFF&label=download" alt="Latest release" /></a>
 <img src="https://img.shields.io/badge/platform-macOS%2014%2B-111?style=flat-square" alt="macOS 14+" />
 <img src="https://img.shields.io/badge/built%20with-SwiftUI-F05138?style=flat-square&logo=swift&logoColor=white" alt="SwiftUI" />
 <img src="https://img.shields.io/badge/privacy-100%25%20local-4EAA25?style=flat-square" alt="100% local" />
@@ -26,18 +26,18 @@ and token usage — all computed locally from your session logs. Nothing leaves 
 
 <br />
 
-## ✨ Features
+## Features
 
-- 💰 **Cost at a glance** — today's spend lives right in your menu bar.
-- 🧑‍💻 **Languages you actually code in** — a donut + ranked bars by *lines written*,
+- **Cost at a glance** — today's spend lives right in your menu bar.
+- **Languages you actually code in** — a donut + ranked bars by *lines written*,
   detected from every `edit`/`write` (TypeScript, Python, Swift, Go…).
-- 🤖 **Models** — cost and call counts per model (Claude, GPT…).
-- 📁 **Projects** — spend and session counts, per repo.
-- 🔢 **Tokens & tools** — input/output/cache breakdown and tool-call frequency.
-- ⏱️ **Time ranges** — `1d / 7d / 30d / All`, applied to every tab.
-- 🪟 **Native & light** — a translucent, rounded menu-bar panel (no triangle),
+- **Models** — cost and call counts per model (Claude, GPT…).
+- **Projects** — spend and session counts, per repo.
+- **Tokens & tools** — input/output/cache breakdown and tool-call frequency.
+- **Time ranges** — `1d / 7d / 30d / All`, applied to every tab.
+- **Native & light** — a translucent, rounded menu-bar panel (no triangle),
   ⌘Q to quit, launch-at-login, and a real Settings window.
-- 🔒 **Private** — reads only your local `~/.pi/agent/sessions`. No network, ever.
+- **Private** — reads only your local `~/.pi/agent/sessions`. No network, ever.
 
 <div align="center">
 <img src="docs/screenshots/models.png" width="260" alt="Models" />
@@ -49,9 +49,13 @@ and token usage — all computed locally from your session logs. Nothing leaves 
 
 <br />
 
-## 📦 Install
+## Download
 
-1. Download **`Pi-Stats.dmg`** from the [latest release](https://github.com/phun333/pi-infobar/releases/latest).
+Grab the latest build from the release page:
+
+**[Download Pi Stats v0.1.0 →](https://github.com/phun333/pi-infobar/releases/tag/v0.1.0)**
+
+1. Download **`Pi-Stats.dmg`** from that page.
 2. Open it and drag **Pi Stats** into **Applications**.
 3. First launch only: right-click **Pi Stats** → **Open** (unsigned build → a one-time
    Gatekeeper prompt). It opens normally after that.
@@ -59,7 +63,7 @@ and token usage — all computed locally from your session logs. Nothing leaves 
 
 > To start it automatically: **Settings → General → Launch at login**.
 
-## ⚙️ Settings
+## Settings
 
 Open with the gear icon in the dashboard header.
 
@@ -69,7 +73,7 @@ Open with the gear icon in the dashboard header.
 | **General** | Launch at login · default tab · default time range |
 | **About** | Version & data source |
 
-## 🧠 How it works
+## How it works
 
 ```
 ~/.pi/agent/sessions/**/*.jsonl
@@ -86,18 +90,18 @@ Open with the gear icon in the dashboard header.
   counting newlines in the written text as "lines".
 - **Projects** come from each session's `cwd`.
 
-## 🛠 Build from source
+## Build from source
 
-Requires the Swift 6 toolchain (Command Line Tools — **no full Xcode needed**).
+Requires the Swift 6 toolchain (Command Line Tools — no full Xcode needed).
 
 ```bash
 ./build_app.sh                 # → build/Pi Stats.app (also generates the icon)
 open "build/Pi Stats.app"
 ```
 
-It's a menu-bar-only app (`LSUIElement`) — no Dock icon. Quit with **⌘Q**.
+It's a menu-bar-only app (`LSUIElement`) — no Dock icon. Quit with ⌘Q.
 
-## 🚀 Releasing
+## Releasing
 
 ```bash
 ./release.sh                   # → dist/Pi-Stats.dmg + dist/Pi-Stats.zip
@@ -107,7 +111,7 @@ It's a menu-bar-only app (`LSUIElement`) — no Dock icon. Quit with **⌘Q**.
 The DMG is a drag-to-Applications installer, ad-hoc signed. For a Gatekeeper-clean
 install, add a Developer ID signature + notarization to `release.sh`.
 
-## 📁 Project layout
+## Project layout
 
 ```
 Sources/PiInfobar/
@@ -131,6 +135,4 @@ release.sh           builds the DMG + zip (+ optional gh release)
 
 ## License
 
-MIT — do whatever you like.
-
-<div align="center"><sub>Built with SwiftUI · 100% local · made for Pi</sub></div>
+MIT — see [LICENSE](LICENSE).
