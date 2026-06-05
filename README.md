@@ -26,19 +26,6 @@ and token usage — all computed locally from your session logs. Nothing leaves 
 
 <br />
 
-## Features
-
-- **Cost at a glance** — today's spend lives right in your menu bar.
-- **Languages you actually code in** — a donut + ranked bars by *lines written*,
-  detected from every `edit`/`write` (TypeScript, Python, Swift, Go…).
-- **Models** — cost and call counts per model (Claude, GPT…).
-- **Projects** — spend and session counts, per repo.
-- **Tokens & tools** — input/output/cache breakdown and tool-call frequency.
-- **Time ranges** — `1d / 7d / 30d / All`, applied to every tab.
-- **Native & light** — a translucent, rounded menu-bar panel (no triangle),
-  ⌘Q to quit, launch-at-login, and a real Settings window.
-- **Private** — reads only your local `~/.pi/agent/sessions`. No network, ever.
-
 <div align="center">
 <img src="docs/screenshots/models.png" width="260" alt="Models" />
 &nbsp;
@@ -49,88 +36,35 @@ and token usage — all computed locally from your session logs. Nothing leaves 
 
 <br />
 
-## Download
+## Features
 
-Grab the latest build from the release page:
+- **Cost** — today's spend in the menu bar; total / avg / daily-spend chart.
+- **Languages** — donut + ranked bars by lines written (TypeScript, Python, Swift, Go…).
+- **Models, Projects, Tokens & Tools** — cost and counts, per item.
+- **Time ranges** — `1d / 7d / 30d / All` across every tab.
+- **Native** — translucent rounded panel, ⌘Q, launch-at-login, Settings window.
+- **Private** — reads only `~/.pi/agent/sessions`. No network.
+
+## Download
 
 **[Download Pi Stats v0.1.0 →](https://github.com/phun333/pi-infobar/releases/tag/v0.1.0)**
 
-1. Download **`Pi-Stats.dmg`** from that page.
-2. Open it and drag **Pi Stats** into **Applications**.
-3. First launch only: right-click **Pi Stats** → **Open** (unsigned build → a one-time
-   Gatekeeper prompt). It opens normally after that.
-4. The **π** mark appears in your menu bar — click it for the dashboard.
-
-> To start it automatically: **Settings → General → Launch at login**.
-
-## Settings
-
-Open with the gear icon in the dashboard header.
-
-| Tab | What you can change |
-|-----|---------------------|
-| **Menu Bar** | Show/hide the π icon · pick the menu-bar number (today/total cost, lines, messages, sessions, or icon-only) with a live preview |
-| **General** | Launch at login · default tab · default time range |
-| **About** | Version & data source |
+Open the DMG, drag **Pi Stats** to Applications. First launch: right-click → **Open**
+(unsigned build, one-time Gatekeeper prompt). The **π** mark then lives in your menu bar.
 
 ## How it works
 
-```
-~/.pi/agent/sessions/**/*.jsonl
-        │  stream + parse every message
-        ▼
-   per-day aggregates  ──cache──▶  ~/.pi/pi-infobar-cache.json
-        │  (keyed by file size+mtime — only first run parses fully)
-        ▼
-   summarize for the selected range  ──▶  SwiftUI dashboard
-```
+Streams every `~/.pi/agent/sessions/**/*.jsonl`, aggregates per day, and caches the
+result. Cost comes from each message's recorded `usage.cost` (no estimates); languages
+from the file extension of every `edit`/`write`; projects from each session's `cwd`.
 
-- **Cost** comes straight from each assistant message's recorded `usage.cost` — no estimates.
-- **Languages** are detected from the file extension of every `edit`/`write` tool call,
-  counting newlines in the written text as "lines".
-- **Projects** come from each session's `cwd`.
+## Build
 
-## Build from source
-
-Requires the Swift 6 toolchain (Command Line Tools — no full Xcode needed).
+Swift 6 toolchain (Command Line Tools, no full Xcode):
 
 ```bash
-./build_app.sh                 # → build/Pi Stats.app (also generates the icon)
-open "build/Pi Stats.app"
-```
-
-It's a menu-bar-only app (`LSUIElement`) — no Dock icon. Quit with ⌘Q.
-
-## Releasing
-
-```bash
-./release.sh                   # → dist/Pi-Stats.dmg + dist/Pi-Stats.zip
-./release.sh v0.2.0            # …and publishes a GitHub release (needs `gh`)
-```
-
-The DMG is a drag-to-Applications installer, ad-hoc signed. For a Gatekeeper-clean
-install, add a Developer ID signature + notarization to `release.sh`.
-
-## Project layout
-
-```
-Sources/PiInfobar/
-  App.swift          NSStatusItem + borderless translucent panel, menu-bar title
-  Models.swift       aggregate / summary models, TimeRange
-  LanguageMap.swift  extension → language name / color / SF Symbol
-  PiLogo.swift       vector π mark (Shape + template menu-bar image)
-  SettingsStore.swift  UserDefaults keys, MenuBarMetric, LaunchAtLogin
-  Settings.swift     SettingsWindowController + NavigationSplitView panes
-  StatsEngine.swift  load + summarize per range
-  Parser.swift       jsonl scanning, per-day aggregation, disk cache
-  PopoverView.swift  header, range picker, tab bar, footer
-  Tabs.swift         Overview / Languages / Models / Projects / Usage
-  Components.swift   StatCard, BarRow, MenuRow, formatting helpers
-Tools/
-  render_icon.swift  draws the 1024px app icon
-  make_icon.sh       builds Resources/AppIcon.icns
-build_app.sh         assembles build/Pi Stats.app
-release.sh           builds the DMG + zip (+ optional gh release)
+./build_app.sh && open "build/Pi Stats.app"   # build + run
+./release.sh v0.2.0                            # package DMG/zip + GitHub release
 ```
 
 ## License
