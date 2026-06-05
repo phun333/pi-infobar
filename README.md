@@ -49,8 +49,14 @@ and token usage — all computed locally from your session logs. Nothing leaves 
 
 **[Download Pi Stats v0.1.0 →](https://github.com/phun333/pi-infobar/releases/tag/v0.1.0)**
 
-Open the DMG, drag **Pi Stats** to Applications. First launch: right-click → **Open**
-(unsigned build, one-time Gatekeeper prompt). The **π** mark then lives in your menu bar.
+1. Open `Pi-Stats.dmg` and drag **Pi Stats** to **Applications**.
+2. The build is unsigned (no paid Apple account), so macOS quarantines it. Clear it once:
+   ```bash
+   xattr -dr com.apple.quarantine "/Applications/Pi Stats.app"
+   ```
+   (Or: right-click the app → **Open**; on newer macOS, allow it under
+   **System Settings → Privacy & Security → Open Anyway**.)
+3. Launch it — the **π** mark appears in your menu bar. Universal binary (Apple Silicon + Intel).
 
 ## How it works
 

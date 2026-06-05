@@ -189,7 +189,7 @@ extension StatsEngine {
 
     /// Decode the encoded directory name back to a project (best effort).
     nonisolated static func decodeProjectName(_ encoded: String) -> String {
-        // e.g. "--Users-ali-Documents-GitHub-wraith-internal--"
+        // e.g. "--Users-me-Documents-GitHub-my-project--"  →  "project"
         var s = encoded
         while s.hasPrefix("-") { s.removeFirst() }
         while s.hasSuffix("-") { s.removeLast() }

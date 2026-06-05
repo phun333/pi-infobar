@@ -7,10 +7,20 @@ APP_NAME="Pi Stats"
 BUNDLE_ID="com.pi.infobar"
 VERSION="0.1.0"
 
-echo "▸ Building release binary…"
-swift build -c release
+# Build a universal binary (Apple Silicon + Intel) so it runs on any Mac.
+echo "▸ Building arm64…"
+swift build -c release --arch arm64
+echo "▸ Building x86_64…"
+swift build -c release --arch x86_64
 
-BIN=".build/release/PiInfobar"
+ARM=".build/arm64-apple-macosx/release/PiInfobar"
+X86=".build/x86_64-apple-macosx/release/PiInfobar"
+BIN="build/PiInfobar-universal"
+mkdir -p build
+echo "▸ Merging into a universal binary…"
+lipo -create "$ARM" "$X86" -output "$BIN"
+lipo -archs "$BIN"
+
 APP="build/${APP_NAME}.app"
 CONTENTS="$APP/Contents"
 
