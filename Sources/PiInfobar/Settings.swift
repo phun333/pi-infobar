@@ -212,14 +212,8 @@ struct AboutPane: View {
         Form {
             Section {
                 HStack(spacing: 14) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(LinearGradient(colors: [Color(hex: 0x7C5CFF), Color(hex: 0x4D7CFF)],
-                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .frame(width: 56, height: 56)
-                        PiLogoShape().fill(.white, style: FillStyle(eoFill: true))
-                            .frame(width: 30, height: 30)
-                    }
+                    PiLogoShape().fill(.primary, style: FillStyle(eoFill: true))
+                        .frame(width: 44, height: 44)
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Pi Stats").font(.system(size: 16, weight: .bold))
                         Text(version).font(.caption).foregroundStyle(.secondary)
