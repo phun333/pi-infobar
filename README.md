@@ -9,7 +9,7 @@
 See your total spend, the languages you actually code in, model costs, projects
 and token usage — all computed locally from your session logs. Nothing leaves your Mac.
 
-<a href="https://github.com/phun333/pi-infobar/releases/tag/v0.1.0"><img src="https://img.shields.io/github/v/release/phun333/pi-infobar?style=flat-square&color=4D7CFF&label=download" alt="Latest release" /></a>
+<a href="https://github.com/phun333/pi-infobar/releases/tag/v0.1.0"><img src="https://img.shields.io/badge/download-v0.1.0-4D7CFF?style=flat-square" alt="Download v0.1.0" /></a>
 <img src="https://img.shields.io/badge/platform-macOS%2014%2B-111?style=flat-square" alt="macOS 14+" />
 <img src="https://img.shields.io/badge/built%20with-SwiftUI-F05138?style=flat-square&logo=swift&logoColor=white" alt="SwiftUI" />
 <img src="https://img.shields.io/badge/privacy-100%25%20local-4EAA25?style=flat-square" alt="100% local" />
