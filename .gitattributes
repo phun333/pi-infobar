@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Installed agent skills are vendored — exclude from GitHub language stats
+.agents/** linguist-vendored
