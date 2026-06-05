@@ -183,13 +183,13 @@ final class StatsEngine: ObservableObject {
         return f
     }()
 
-    nonisolated static let isoParser: ISO8601DateFormatter = {
+    nonisolated(unsafe) static let isoParser: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f
     }()
 
-    nonisolated static let isoParserNoFrac: ISO8601DateFormatter = {
+    nonisolated(unsafe) static let isoParserNoFrac: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime]
         return f
