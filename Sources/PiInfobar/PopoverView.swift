@@ -50,15 +50,9 @@ struct PopoverView: View {
 
     private var header: some View {
         HStack(spacing: 9) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(LinearGradient(colors: [Color(hex: 0x7C5CFF), Color(hex: 0x4D7CFF)],
-                                         startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 26, height: 26)
-                PiLogoShape()
-                    .fill(.white, style: FillStyle(eoFill: true))
-                    .frame(width: 15, height: 15)
-            }
+            PiLogoShape()
+                .fill(.primary, style: FillStyle(eoFill: true))
+                .frame(width: 20, height: 20)
             VStack(alignment: .leading, spacing: 0) {
                 Text("Pi Stats")
                     .font(.system(size: 14, weight: .bold))
