@@ -53,11 +53,17 @@ final class StatsEngine: ObservableObject {
         Self.summarize(days: days, range: range)
     }
 
-    /// Today's cost — used for the menu bar title.
-    var todayCost: Double {
+    private var todayAgg: DayAgg? {
         let key = Self.dayFormatter.string(from: Date())
-        return days.first(where: { $0.date == key })?.cost ?? 0
+        return days.first(where: { $0.date == key })
     }
+
+    /// Today's cost — used for the menu bar title.
+    var todayCost: Double { todayAgg?.cost ?? 0 }
+    var todayLines: Int { todayAgg?.langLines.values.reduce(0, +) ?? 0 }
+    var todayMessages: Int { (todayAgg.map { $0.userMsgs + $0.asstMsgs }) ?? 0 }
+    var todaySessions: Int { todayAgg?.sessionIds.count ?? 0 }
+    var totalCostAll: Double { days.reduce(0) { $0 + $1.cost } }
 
     // MARK: - Aggregation / summarizing
 

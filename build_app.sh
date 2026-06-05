@@ -14,10 +14,16 @@ BIN=".build/release/PiInfobar"
 APP="build/${APP_NAME}.app"
 CONTENTS="$APP/Contents"
 
+if [ ! -f Resources/AppIcon.icns ]; then
+    echo "▸ Generating app icon…"
+    ./Tools/make_icon.sh
+fi
+
 echo "▸ Assembling bundle: $APP"
 rm -rf "$APP"
 mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
 cp "$BIN" "$CONTENTS/MacOS/PiInfobar"
+cp Resources/AppIcon.icns "$CONTENTS/Resources/AppIcon.icns"
 
 cat > "$CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -31,6 +37,8 @@ cat > "$CONTENTS/Info.plist" <<PLIST
     <key>CFBundleShortVersionString</key><string>${VERSION}</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleExecutable</key><string>PiInfobar</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>CFBundleIconName</key><string>AppIcon</string>
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>

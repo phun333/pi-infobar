@@ -79,7 +79,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let root = PopoverView(engine: engine,
                                onQuit: { NSApp.terminate(nil) },
-                               onRefresh: { [weak self] in self?.engine.load(force: true) })
+                               onRefresh: { [weak self] in self?.engine.load(force: true) },
+                               onSettings: { [weak self] in
+                                   self?.hidePanel()
+                                   SettingsWindowController.show()
+                               })
         let hosting = NSHostingView(rootView: root)
         hosting.frame = blur.bounds
         hosting.autoresizingMask = [.width, .height]
@@ -151,13 +155,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func updateTitle(cost: Double, loading: Bool) {
         guard let button = statusItem.button else { return }
-        button.image = PiLogoShape.menuBarImage(size: 14)
-        button.imagePosition = .imageLeading
-        if loading && cost == 0 {
-            button.title = " …"
-        } else {
-            button.title = String(format: " $%.2f", cost)
-        }
         button.font = .monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
+
+        var showIcon = SettingsStore.showMenuBarIcon
+        let metric = SettingsStore.menuBarMetric
+
+        let text: String
+        if loading && engine.lastUpdated == nil {
+            text = "…"
+        } else {
+            text = metricText(metric)
+        }
+        // Never end up with a completely empty status item.
+        if !showIcon && text.isEmpty { showIcon = true }
+
+        button.image = showIcon ? PiLogoShape.menuBarImage(size: 14) : nil
+        button.imagePosition = showIcon ? .imageLeading : .noImage
+        button.title = text.isEmpty ? "" : (showIcon ? " \(text)" : text)
+    }
+
+    @MainActor
+    private func metricText(_ metric: MenuBarMetric) -> String {
+        switch metric {
+        case .todayCost:     return String(format: "$%.2f", engine.todayCost)
+        case .totalCost:     return Fmt.money(engine.totalCostAll)
+        case .todayLines:    return "\(Fmt.int(engine.todayLines)) ln"
+        case .todayMessages: return "\(Fmt.int(engine.todayMessages)) msg"
+        case .todaySessions: return "\(engine.todaySessions) sess"
+        case .none:          return ""
+        }
     }
 }

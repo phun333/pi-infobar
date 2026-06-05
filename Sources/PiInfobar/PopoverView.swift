@@ -14,9 +14,10 @@ struct PopoverView: View {
     @ObservedObject var engine: StatsEngine
     let onQuit: () -> Void
     let onRefresh: () -> Void
+    var onSettings: () -> Void = {}
 
-    @State private var tab: Tab = .overview
-    @State private var range: TimeRange = .all
+    @State private var tab: Tab = SettingsStore.defaultTab
+    @State private var range: TimeRange = SettingsStore.defaultRange
 
     private var summary: StatsSummary { engine.summary(for: range) }
 
@@ -75,6 +76,13 @@ struct PopoverView: View {
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
             .help("Rescan sessions")
+            Button(action: onSettings) {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .help("Settings")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
