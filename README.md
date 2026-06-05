@@ -1,92 +1,123 @@
-# Pi Stats — menu bar usage dashboard
+<div align="center">
 
-A native macOS menu-bar app that reads your local **Pi** agent sessions
-(`~/.pi/agent/sessions/**/*.jsonl`) and shows a rich usage dashboard — inspired by
-"OpenCode Stats", but for Pi and with **per-language coding stats**.
+<img src="docs/screenshots/icon.png" width="120" alt="Pi Stats icon" />
 
-Everything is computed locally. Nothing leaves your machine.
+# Pi Stats
 
-## Install (for users)
+**A native macOS menu-bar dashboard for your [Pi](https://pi.dev) agent usage.**
 
-1. Download **Pi-Stats.dmg** from the [Releases](https://github.com/phun333/pi-infobar/releases) page.
+See your total spend, the languages you actually code in, model costs, projects
+and token usage — all computed locally from your session logs. Nothing leaves your Mac.
+
+<a href="https://github.com/phun333/pi-infobar/releases/latest"><img src="https://img.shields.io/github/v/release/phun333/pi-infobar?style=flat-square&color=4D7CFF&label=download" alt="Latest release" /></a>
+<img src="https://img.shields.io/badge/platform-macOS%2014%2B-111?style=flat-square" alt="macOS 14+" />
+<img src="https://img.shields.io/badge/built%20with-SwiftUI-F05138?style=flat-square&logo=swift&logoColor=white" alt="SwiftUI" />
+<img src="https://img.shields.io/badge/privacy-100%25%20local-4EAA25?style=flat-square" alt="100% local" />
+
+</div>
+
+<br />
+
+<div align="center">
+<img src="docs/screenshots/overview.png" width="320" alt="Overview" />
+&nbsp;
+<img src="docs/screenshots/languages.png" width="320" alt="Languages" />
+</div>
+
+<br />
+
+## ✨ Features
+
+- 💰 **Cost at a glance** — today's spend lives right in your menu bar.
+- 🧑‍💻 **Languages you actually code in** — a donut + ranked bars by *lines written*,
+  detected from every `edit`/`write` (TypeScript, Python, Swift, Go…).
+- 🤖 **Models** — cost and call counts per model (Claude, GPT…).
+- 📁 **Projects** — spend and session counts, per repo.
+- 🔢 **Tokens & tools** — input/output/cache breakdown and tool-call frequency.
+- ⏱️ **Time ranges** — `1d / 7d / 30d / All`, applied to every tab.
+- 🪟 **Native & light** — a translucent, rounded menu-bar panel (no triangle),
+  ⌘Q to quit, launch-at-login, and a real Settings window.
+- 🔒 **Private** — reads only your local `~/.pi/agent/sessions`. No network, ever.
+
+<div align="center">
+<img src="docs/screenshots/models.png" width="260" alt="Models" />
+&nbsp;
+<img src="docs/screenshots/projects.png" width="260" alt="Projects" />
+&nbsp;
+<img src="docs/screenshots/usage.png" width="260" alt="Usage" />
+</div>
+
+<br />
+
+## 📦 Install
+
+1. Download **`Pi-Stats.dmg`** from the [latest release](https://github.com/phun333/pi-infobar/releases/latest).
 2. Open it and drag **Pi Stats** into **Applications**.
-3. First launch only: right-click **Pi Stats** → **Open** (the build is unsigned, so
-   macOS shows a one-time Gatekeeper prompt). After that it opens normally.
-4. The **π** mark appears in your menu bar. Click it for the dashboard, or open
-   **Settings** (gear icon) to tweak what shows.
+3. First launch only: right-click **Pi Stats** → **Open** (unsigned build → a one-time
+   Gatekeeper prompt). It opens normally after that.
+4. The **π** mark appears in your menu bar — click it for the dashboard.
 
-To start it automatically: **Settings → General → Launch at login**.
+> To start it automatically: **Settings → General → Launch at login**.
 
-## What it shows
-
-The menu bar item displays **today's spend** (e.g. `📊 $9.75`). Click it for a popover with tabs:
-
-- **Overview** — Total cost, sessions, messages, active days, avg/day, today + a daily-spend bar chart.
-- **Languages** — *Which languages you code in most*, by lines written, with a donut + ranked bars
-  (TypeScript, JavaScript, Python, Swift, Go, …). Detected from `edit`/`write` tool calls.
-- **Models** — Cost & call count per model (Claude Opus, GPT, …).
-- **Projects** — Cost & session count per project (from each session's `cwd`).
-- **Usage** — Token breakdown (input / output / cache read / cache write) and tool-call counts.
-
-A time-range switch (**1d / 7d / 30d / All**) filters every tab.
-
-## Settings
+## ⚙️ Settings
 
 Open with the gear icon in the dashboard header.
 
-- **Menu Bar** — show/hide the π icon, and choose what the menu-bar number means:
-  today's cost, total cost, lines today, messages today, sessions today, or nothing
-  (icon only). Live preview included.
-- **General** — Launch at login, plus the default tab and time range the dashboard opens on.
-- **About** — version and data source.
+| Tab | What you can change |
+|-----|---------------------|
+| **Menu Bar** | Show/hide the π icon · pick the menu-bar number (today/total cost, lines, messages, sessions, or icon-only) with a live preview |
+| **General** | Launch at login · default tab · default time range |
+| **About** | Version & data source |
 
-## How it works
+## 🧠 How it works
 
-- `Parser.swift` streams every session `.jsonl`, aggregating into **per-day** buckets.
-- Results are cached to `~/.pi/pi-infobar-cache.json`, keyed by a signature of the session
-  files (path + size + mtime), so only the first launch parses the full history; later launches
-  are instant. The cache auto-rebuilds when sessions change (or via the refresh button).
-- Range filtering / summarizing happens in-memory over the day buckets.
+```
+~/.pi/agent/sessions/**/*.jsonl
+        │  stream + parse every message
+        ▼
+   per-day aggregates  ──cache──▶  ~/.pi/pi-infobar-cache.json
+        │  (keyed by file size+mtime — only first run parses fully)
+        ▼
+   summarize for the selected range  ──▶  SwiftUI dashboard
+```
 
-## Build from source
+- **Cost** comes straight from each assistant message's recorded `usage.cost` — no estimates.
+- **Languages** are detected from the file extension of every `edit`/`write` tool call,
+  counting newlines in the written text as "lines".
+- **Projects** come from each session's `cwd`.
 
-Requires the Swift 6 toolchain (Command Line Tools — no full Xcode needed).
+## 🛠 Build from source
+
+Requires the Swift 6 toolchain (Command Line Tools — **no full Xcode needed**).
 
 ```bash
-./build_app.sh                 # builds build/Pi Stats.app (generates the icon too)
+./build_app.sh                 # → build/Pi Stats.app (also generates the icon)
 open "build/Pi Stats.app"
 ```
 
-It's a menu-bar-only app (`LSUIElement`), so there's no Dock icon. Quit with **⌘Q** or
-the Quit row in the footer.
+It's a menu-bar-only app (`LSUIElement`) — no Dock icon. Quit with **⌘Q**.
 
-## Packaging a release
+## 🚀 Releasing
 
 ```bash
 ./release.sh                   # → dist/Pi-Stats.dmg + dist/Pi-Stats.zip
-./release.sh v0.1.0            # …and publishes a GitHub release (needs `gh`)
+./release.sh v0.2.0            # …and publishes a GitHub release (needs `gh`)
 ```
 
-The DMG is a drag-to-Applications installer. The build is **ad-hoc signed** (no Apple
-Developer account), so users do a one-time right-click → Open. For a frictionless,
-Gatekeeper-clean install you'd add a Developer ID signature + notarization in `release.sh`.
+The DMG is a drag-to-Applications installer, ad-hoc signed. For a Gatekeeper-clean
+install, add a Developer ID signature + notarization to `release.sh`.
 
-### App icon
-
-`Tools/make_icon.sh` renders the π mark on a gradient squircle and builds
-`Resources/AppIcon.icns` (regenerated automatically by `build_app.sh` if missing).
-
-## Project layout
+## 📁 Project layout
 
 ```
 Sources/PiInfobar/
   App.swift          NSStatusItem + borderless translucent panel, menu-bar title
-  Models.swift       Aggregate / summary data models, TimeRange
+  Models.swift       aggregate / summary models, TimeRange
   LanguageMap.swift  extension → language name / color / SF Symbol
   PiLogo.swift       vector π mark (Shape + template menu-bar image)
   SettingsStore.swift  UserDefaults keys, MenuBarMetric, LaunchAtLogin
   Settings.swift     SettingsWindowController + NavigationSplitView panes
-  StatsEngine.swift  ObservableObject; load + summarize per range
+  StatsEngine.swift  load + summarize per range
   Parser.swift       jsonl scanning, per-day aggregation, disk cache
   PopoverView.swift  header, range picker, tab bar, footer
   Tabs.swift         Overview / Languages / Models / Projects / Usage
@@ -95,5 +126,11 @@ Tools/
   render_icon.swift  draws the 1024px app icon
   make_icon.sh       builds Resources/AppIcon.icns
 build_app.sh         assembles build/Pi Stats.app
-release.sh           builds dist/Pi-Stats.dmg + .zip (+ optional gh release)
+release.sh           builds the DMG + zip (+ optional gh release)
 ```
+
+## License
+
+MIT — do whatever you like.
+
+<div align="center"><sub>Built with SwiftUI · 100% local · made for Pi</sub></div>
