@@ -12,17 +12,45 @@ final class StatsEngine: ObservableObject {
     /// The parsed per-day aggregates (full history).
     private var days: [DayAgg] = []
 
-    nonisolated static let sessionsDir: URL = {
+    nonisolated static var sessionsDir: URL {
         let home = FileManager.default.homeDirectoryForCurrentUser
+        if UserDefaults.standard.bool(forKey: SettingsKeys.remoteSyncEnabled) {
+            return home.appendingPathComponent(".pi/remote-agent-sessions")
+        }
         return home.appendingPathComponent(".pi/agent/sessions")
-    }()
+    }
 
-    nonisolated static let cacheURL: URL = {
+    nonisolated static var cacheURL: URL {
         let home = FileManager.default.homeDirectoryForCurrentUser
+        if UserDefaults.standard.bool(forKey: SettingsKeys.remoteSyncEnabled) {
+            return home.appendingPathComponent(".pi/pi-infobar-remote-cache.json")
+        }
         return home.appendingPathComponent(".pi/pi-infobar-cache.json")
-    }()
+    }
 
     // MARK: - Public API
+
+    nonisolated static func performRemoteSync() async throws {
+        let defaults = UserDefaults.standard
+        let host = defaults.string(forKey: SettingsKeys.remoteHost) ?? ""
+        let port = defaults.string(forKey: SettingsKeys.remotePort) ?? "22"
+        let user = defaults.string(forKey: SettingsKeys.remoteUser) ?? ""
+        let keyPath = defaults.string(forKey: SettingsKeys.remoteKeyPath) ?? "~/.ssh/id_rsa"
+        let remotePath = defaults.string(forKey: SettingsKeys.remotePath) ?? "~/.pi/agent/sessions"
+
+        guard !host.isEmpty, !user.isEmpty else {
+            throw NSError(domain: "PiStats", code: 1, userInfo: [NSLocalizedDescriptionKey: "Remote host and username must be configured in Settings."])
+        }
+
+        try await RemoteSync.sync(
+            host: host,
+            port: port,
+            user: user,
+            keyPath: keyPath,
+            remotePath: remotePath,
+            localPath: sessionsDir
+        )
+    }
 
     func load(force: Bool = false) {
         loading = true
@@ -30,6 +58,18 @@ final class StatsEngine: ObservableObject {
         error = nil
         Task.detached(priority: .userInitiated) {
             do {
+                if UserDefaults.standard.bool(forKey: SettingsKeys.remoteSyncEnabled) {
+                    do {
+                        try await Self.performRemoteSync()
+                    } catch {
+                        let cacheExists = FileManager.default.fileExists(atPath: Self.cacheURL.path)
+                        if !cacheExists {
+                            throw error
+                        }
+                        NSLog("Remote sync failed: \(error.localizedDescription). Using cached data.")
+                    }
+                }
+
                 let agg = try Self.buildAggregate(force: force) { p in
                     Task { @MainActor in self.progress = p }
                 }
