@@ -7,12 +7,13 @@
 **A native macOS menu-bar dashboard for your [Pi](https://pi.dev) agent usage.**
 
 See your total spend, the languages you actually code in, model costs, projects
-and token usage — all computed locally from your session logs. Nothing leaves your Mac.
+and token usage — all computed locally from your session logs. Local by default,
+with optional SSH sync from your own remote Pi server.
 
 <a href="https://github.com/phun333/pi-infobar/releases/tag/v0.1.0"><img src="https://img.shields.io/badge/download-v0.1.0-4D7CFF?style=flat-square" alt="Download v0.1.0" /></a>
 <img src="https://img.shields.io/badge/platform-macOS%2014%2B-111?style=flat-square" alt="macOS 14+" />
 <img src="https://img.shields.io/badge/built%20with-SwiftUI-F05138?style=flat-square&logo=swift&logoColor=white" alt="SwiftUI" />
-<img src="https://img.shields.io/badge/privacy-100%25%20local-4EAA25?style=flat-square" alt="100% local" />
+<img src="https://img.shields.io/badge/privacy-local--first-4EAA25?style=flat-square" alt="local-first" />
 
 </div>
 
@@ -38,12 +39,13 @@ and token usage — all computed locally from your session logs. Nothing leaves 
 
 ## Features
 
-- **Cost** — today's spend in the menu bar; total / avg / daily-spend chart.
+- **Cost** — today's spend in the menu bar; total / avg / daily-spend chart (hover any day for its exact spend).
 - **Languages** — donut + ranked bars by lines written (TypeScript, Python, Swift, Go…).
 - **Models, Projects, Tokens & Tools** — cost and counts, per item.
 - **Time ranges** — `1d / 7d / 30d / All` across every tab.
 - **Native** — translucent rounded panel, ⌘Q, launch-at-login, Settings window.
-- **Private** — reads only `~/.pi/agent/sessions`. No network.
+- **Remote (optional)** — sync session logs from your own server over SSH/rsync, then browse them locally; flip between Local and Remote from the popover.
+- **Private** — local by default (reads only `~/.pi/agent/sessions`, no network). Remote mode only pulls logs from the host *you* configure — nothing is ever uploaded.
 
 ## Download
 
@@ -79,6 +81,10 @@ curl -L https://github.com/phun333/pi-infobar/releases/download/v0.1.0/Pi-Stats.
 Streams every `~/.pi/agent/sessions/**/*.jsonl`, aggregates per day, and caches the
 result. Cost comes from each message's recorded `usage.cost` (no estimates); languages
 from the file extension of every `edit`/`write`; projects from each session's `cwd`.
+
+**Remote mode** (optional) uses `rsync` over SSH to pull the matching `*.jsonl` files
+from a server you configure in Settings into a separate local cache, then runs the exact
+same local aggregation. Data only ever flows from your host to your Mac — never out.
 
 ## Build
 
