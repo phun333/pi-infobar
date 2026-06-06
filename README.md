@@ -10,7 +10,7 @@ See your total spend, the languages you actually code in, model costs, projects
 and token usage — all computed locally from your session logs. Local by default,
 with optional SSH sync from your own remote Pi server.
 
-<a href="https://github.com/phun333/pi-infobar/releases/tag/v0.1.0"><img src="https://img.shields.io/badge/download-v0.1.0-4D7CFF?style=flat-square" alt="Download v0.1.0" /></a>
+<a href="https://github.com/phun333/pi-infobar/releases/tag/v0.2.0"><img src="https://img.shields.io/badge/download-v0.2.0-4D7CFF?style=flat-square" alt="Download v0.2.0" /></a>
 <img src="https://img.shields.io/badge/platform-macOS%2014%2B-111?style=flat-square" alt="macOS 14+" />
 <img src="https://img.shields.io/badge/built%20with-SwiftUI-F05138?style=flat-square&logo=swift&logoColor=white" alt="SwiftUI" />
 <img src="https://img.shields.io/badge/privacy-local--first-4EAA25?style=flat-square" alt="local-first" />
@@ -58,7 +58,7 @@ a broken app — you just have to clear the quarantine flag once.
 Paste this into **Terminal** — it downloads, installs to Applications, unquarantines, and opens:
 
 ```bash
-curl -L https://github.com/phun333/pi-infobar/releases/download/v0.1.0/Pi-Stats.zip -o /tmp/PiStats.zip && \
+curl -L https://github.com/phun333/pi-infobar/releases/download/v0.2.0/Pi-Stats.zip -o /tmp/PiStats.zip && \
   ditto -xk /tmp/PiStats.zip /Applications && \
   xattr -dr com.apple.quarantine "/Applications/Pi Stats.app" && \
   open "/Applications/Pi Stats.app"
@@ -66,7 +66,7 @@ curl -L https://github.com/phun333/pi-infobar/releases/download/v0.1.0/Pi-Stats.
 
 ### Manual
 
-1. Download **[`Pi-Stats.dmg`](https://github.com/phun333/pi-infobar/releases/tag/v0.1.0)**,
+1. Download **[`Pi-Stats.dmg`](https://github.com/phun333/pi-infobar/releases/tag/v0.2.0)**,
    open it, drag **Pi Stats** into **Applications**. (If you already opened it and it got
    moved to Trash, put it back in Applications first — don't double-click yet.)
 2. Run this once to clear the quarantine flag:

@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 APP_NAME="Pi Stats"
 BUNDLE_ID="com.pi.infobar"
-VERSION="0.1.0"
+VERSION="0.2.0"
 
 # Build a universal binary (Apple Silicon + Intel) so it runs on any Mac.
 echo "▸ Building arm64…"
