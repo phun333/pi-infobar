@@ -235,7 +235,11 @@ struct AboutPane: View {
                 } else {
                     LabeledContent("Source", value: "~/.pi/agent/sessions")
                 }
-                LabeledContent("Privacy", value: "100% local — nothing leaves your Mac")
+                if remoteEnabled && !remoteHost.isEmpty {
+                    LabeledContent("Privacy", value: "Syncs over SSH from your remote host")
+                } else {
+                    LabeledContent("Privacy", value: "100% local — nothing leaves your Mac")
+                }
             }
         }
         .formStyle(.grouped)
@@ -272,48 +276,42 @@ struct RemotePane: View {
             }
 
             if remoteSyncEnabled {
-                Section("SSH Connection Settings") {
-                    HStack {
-                        Text("Host").frame(width: 80, alignment: .leading)
-                        TextField("e.g. 192.168.1.100", text: $remoteHost)
-                            .textFieldStyle(.roundedBorder)
-                    }
+                Section {
+                    TextField("Host", text: $remoteHost,
+                              prompt: Text("e.g. 192.168.1.100"))
+                        .multilineTextAlignment(.trailing)
 
-                    HStack {
-                        Text("Port").frame(width: 80, alignment: .leading)
-                        TextField("22", text: $remotePort)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 80)
-                        Spacer()
-                    }
+                    TextField("Port", text: $remotePort, prompt: Text("22"))
+                        .multilineTextAlignment(.trailing)
 
-                    HStack {
-                        Text("Username").frame(width: 80, alignment: .leading)
-                        TextField("e.g. ubuntu", text: $remoteUser)
-                            .textFieldStyle(.roundedBorder)
-                    }
+                    TextField("Username", text: $remoteUser,
+                              prompt: Text("e.g. ubuntu"))
+                        .multilineTextAlignment(.trailing)
 
-                    HStack {
-                        Text("SSH Key Path").frame(width: 80, alignment: .leading)
-                        TextField("~/.ssh/id_rsa", text: $remoteKeyPath)
-                            .textFieldStyle(.roundedBorder)
-                        Button("Select...") {
-                            chooseSSHKey()
+                    LabeledContent("SSH Key") {
+                        HStack(spacing: 6) {
+                            TextField("Key path", text: $remoteKeyPath,
+                                      prompt: Text("~/.ssh/id_rsa"))
+                                .multilineTextAlignment(.trailing)
+                                .textFieldStyle(.plain)
+                            Button("Choose…") { chooseSSHKey() }
+                                .controlSize(.small)
                         }
-                        .controlSize(.small)
                     }
+                } header: {
+                    Text("SSH Connection")
+                } footer: {
+                    Text("On first connection the host's key is trusted automatically (accept-new). Only connect to servers you control.")
                 }
 
-                Section("Remote Pi Directory") {
-                    HStack {
-                        Text("Path").frame(width: 80, alignment: .leading)
-                        TextField("~/.pi/agent/sessions", text: $remotePath)
-                            .textFieldStyle(.roundedBorder)
-                    }
-                    Text("The directory path on the remote server where Pi session log files are saved.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.leading, 84)
+                Section {
+                    TextField("Remote Path", text: $remotePath,
+                              prompt: Text("~/.pi/agent/sessions"))
+                        .multilineTextAlignment(.trailing)
+                } header: {
+                    Text("Remote Pi Directory")
+                } footer: {
+                    Text("The directory on the remote server where Pi session logs are saved.")
                 }
 
                 Section("Connection Status") {

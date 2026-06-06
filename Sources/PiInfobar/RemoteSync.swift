@@ -15,6 +15,18 @@ enum RemoteSyncError: Error, LocalizedError {
 }
 
 struct RemoteSync {
+    /// Validate and normalize an SSH port. Defaults to 22 when empty; rejects
+    /// anything non-numeric or out of range so it can't smuggle extra args into
+    /// the `rsync -e "ssh …"` string (which rsync word-splits itself).
+    static func normalizedPort(_ port: String) throws -> String {
+        let trimmed = port.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return "22" }
+        guard let n = Int(trimmed), (1...65535).contains(n) else {
+            throw RemoteSyncError.sshFailed("Invalid port \"\(port)\" — must be a number between 1 and 65535.")
+        }
+        return String(n)
+    }
+
     static func sync(
         host: String,
         port: String,
@@ -29,11 +41,11 @@ struct RemoteSync {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/rsync")
 
-        // Expand key path if it contains ~
-        let expandedKeyPath = keyPath.replacingOccurrences(of: "~", with: FileManager.default.homeDirectoryForCurrentUser.path)
+        // Expand a leading "~" to the home directory (only the prefix, not every "~").
+        let expandedKeyPath = (keyPath as NSString).expandingTildeInPath
 
-        // Format port
-        let sshPort = port.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "22" : port
+        // Validate the port so it can't inject extra ssh options.
+        let sshPort = try normalizedPort(port)
 
         // Build SSH option string:
         // -o ConnectTimeout=5: Wait at most 5 seconds for connection
@@ -91,8 +103,8 @@ struct RemoteSync {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
 
-        let expandedKeyPath = keyPath.replacingOccurrences(of: "~", with: FileManager.default.homeDirectoryForCurrentUser.path)
-        let sshPort = port.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "22" : port
+        let expandedKeyPath = (keyPath as NSString).expandingTildeInPath
+        let sshPort = try normalizedPort(port)
 
         var arguments = [
             "-p", sshPort,
