@@ -179,21 +179,51 @@ extension StatsEngine {
             dayMap[dayKey] = day
         }
     }
-
     nonisolated static func lineCount(_ s: String) -> Int {
         if s.isEmpty { return 0 }
-        var n = 1
+        var n = 0
         for ch in s.utf8 where ch == 0x0A { n += 1 }
+        if !s.hasSuffix("\n") { n += 1 }
         return n
     }
 
     /// Decode the encoded directory name back to a project (best effort).
     nonisolated static func decodeProjectName(_ encoded: String) -> String {
-        // e.g. "--Users-me-Documents-GitHub-my-project--"  →  "project"
+        // e.g. "--Users-me-Documents-GitHub-my-project--"  →  "my-project"
         var s = encoded
         while s.hasPrefix("-") { s.removeFirst() }
         while s.hasSuffix("-") { s.removeLast() }
-        let parts = s.split(separator: "-")
-        return parts.last.map(String.init) ?? encoded
+        
+        let home = NSHomeDirectory()
+        var homeEncoded = home.replacingOccurrences(of: "/", with: "-")
+        while homeEncoded.hasPrefix("-") { homeEncoded.removeFirst() }
+        while homeEncoded.hasSuffix("-") { homeEncoded.removeLast() }
+        
+        if !homeEncoded.isEmpty, s.hasPrefix(homeEncoded) {
+            s.removeFirst(homeEncoded.count)
+            while s.hasPrefix("-") { s.removeFirst() }
+        }
+        
+        let commonFolders = ["desktop", "documents", "downloads", "developer", "projects", "oss", "git", "github", "src", "source"]
+        var stripped = true
+        while stripped {
+            stripped = false
+            for folder in commonFolders {
+                let prefix = folder + "-"
+                if s.lowercased().hasPrefix(prefix) {
+                    s.removeFirst(prefix.count)
+                    while s.hasPrefix("-") { s.removeFirst() }
+                    stripped = true
+                    break
+                }
+            }
+        }
+        
+        if s.isEmpty {
+            let parts = encoded.split(separator: "-")
+            return parts.last.map(String.init) ?? encoded
+        }
+        
+        return s
     }
 }

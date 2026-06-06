@@ -10,6 +10,11 @@ let package = Package(
         .executableTarget(
             name: "PiInfobar",
             path: "Sources/PiInfobar"
+        ),
+        .testTarget(
+            name: "PiInfobarTests",
+            dependencies: ["PiInfobar"],
+            path: "Tests/PiInfobarTests"
         )
     ]
 )
