@@ -145,7 +145,33 @@ final class StatsEngine: ObservableObject {
             .sorted { $0.count > $1.count }
 
         // Daily spend (sorted ascending, fill gaps so the chart looks continuous)
-        s.dailySpend = spend.sorted { $0.day < $1.day }
+        var filledSpend: [DaySpend] = []
+        let startDate: Date
+        let endDate = cal.startOfDay(for: Date())
+
+        if let nDays = range.days {
+            startDate = cal.date(byAdding: .day, value: -(nDays - 1), to: endDate)!
+        } else if let earliest = spend.map({ $0.day }).min() {
+            startDate = earliest
+        } else {
+            startDate = endDate
+        }
+
+        var cur = startDate
+        let spendMap = Dictionary(uniqueKeysWithValues: spend.map { ($0.date, $0) })
+
+        while cur <= endDate {
+            let curKey = dayFormatter.string(from: cur)
+            if let existing = spendMap[curKey] {
+                filledSpend.append(existing)
+            } else {
+                filledSpend.append(DaySpend(date: curKey, day: cur, cost: 0.0))
+            }
+            guard let next = cal.date(byAdding: .day, value: 1, to: cur) else { break }
+            cur = next
+        }
+
+        s.dailySpend = filledSpend
 
         return s
     }
