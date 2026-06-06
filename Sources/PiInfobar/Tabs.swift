@@ -50,6 +50,15 @@ struct OverviewTab: View {
 
 struct DailySpendChart: View {
     let data: [DaySpend]
+    @State private var selectedDate: Date?
+
+    /// The day the cursor is currently hovering over (matched by calendar day).
+    private var selected: DaySpend? {
+        guard let selectedDate else { return nil }
+        let cal = Calendar.current
+        return data.first { cal.isDate($0.day, inSameDayAs: selectedDate) }
+    }
+
     var body: some View {
         Chart(data) { d in
             BarMark(
@@ -59,7 +68,32 @@ struct DailySpendChart: View {
             .foregroundStyle(LinearGradient(colors: [Color(hex: 0x6FCF73), Color(hex: 0x4CAF50)],
                                             startPoint: .top, endPoint: .bottom))
             .cornerRadius(2)
+            .opacity(selected == nil || selected?.id == d.id ? 1 : 0.35)
+
+            // Cursor rule + tooltip for the hovered day.
+            if let sel = selected {
+                RuleMark(x: .value("Day", sel.day, unit: .day))
+                    .foregroundStyle(Color.primary.opacity(0.18))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+                    .annotation(position: .top, spacing: 4,
+                                overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(sel.day, format: .dateTime.weekday(.abbreviated).month().day())
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundStyle(.secondary)
+                            Text(Fmt.money(sel.cost))
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Color(hex: 0x4CAF50))
+                        }
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
+                        .overlay(RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(Color.primary.opacity(0.08)))
+                    }
+            }
         }
+        .chartXSelection(value: $selectedDate)
         .chartYAxis {
             AxisMarks(position: .leading) { value in
                 AxisGridLine().foregroundStyle(Color.primary.opacity(0.06))
