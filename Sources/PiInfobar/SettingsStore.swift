@@ -33,6 +33,12 @@ enum SettingsKeys {
     static let defaultRange    = "defaultRange"
     static let defaultTab      = "defaultTab"
     static let launchAtLogin   = "launchAtLogin"
+    static let remoteSyncEnabled = "remoteSyncEnabled"
+    static let remoteHost        = "remoteHost"
+    static let remotePort        = "remotePort"
+    static let remoteUser        = "remoteUser"
+    static let remoteKeyPath     = "remoteKeyPath"
+    static let remotePath        = "remotePath"
 }
 
 enum SettingsStore {

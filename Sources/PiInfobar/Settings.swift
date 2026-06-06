@@ -34,7 +34,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             return
         }
         let win = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 460),
+            contentRect: NSRect(x: 0, y: 0, width: 580, height: 500),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered, defer: false
         )
@@ -44,7 +44,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         win.center()
         win.delegate = self
         win.contentView = NSHostingView(rootView: SettingsView())
-        win.minSize = NSSize(width: 520, height: 420)
+        win.minSize = NSSize(width: 540, height: 460)
         window = win
 
         AppActivationPolicy.enter()
@@ -59,12 +59,13 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 // MARK: - Settings root
 
 enum SettingsTab: String, CaseIterable, Identifiable {
-    case menuBar, general, about
+    case menuBar, general, remote, about
     var id: String { rawValue }
     var title: String {
         switch self {
         case .menuBar: return "Menu Bar"
         case .general: return "General"
+        case .remote:  return "Remote"
         case .about:   return "About"
         }
     }
@@ -72,6 +73,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         switch self {
         case .menuBar: return "menubar.rectangle"
         case .general: return "gearshape"
+        case .remote:  return "server.rack"
         case .about:   return "info.circle"
         }
     }
@@ -91,11 +93,12 @@ struct SettingsView: View {
             switch selection {
             case .menuBar: MenuBarPane()
             case .general: GeneralPane()
+            case .remote:  RemotePane()
             case .about:   AboutPane()
             }
         }
         .navigationTitle("Settings")
-        .frame(minWidth: 520, minHeight: 420)
+        .frame(minWidth: 540, minHeight: 460)
     }
 }
 
@@ -204,6 +207,9 @@ struct GeneralPane: View {
 // MARK: - About pane
 
 struct AboutPane: View {
+    @AppStorage(SettingsKeys.remoteSyncEnabled) private var remoteEnabled = false
+    @AppStorage(SettingsKeys.remoteHost) private var remoteHost = ""
+
     private var version: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0"
         return "Version \(v)"
@@ -224,11 +230,175 @@ struct AboutPane: View {
                 }
             }
             Section("Data") {
-                LabeledContent("Source", value: "~/.pi/agent/sessions")
-                LabeledContent("Privacy", value: "100% local — nothing leaves your Mac")
+                if remoteEnabled && !remoteHost.isEmpty {
+                    LabeledContent("Source", value: "Remote: \(remoteHost)")
+                } else {
+                    LabeledContent("Source", value: "~/.pi/agent/sessions")
+                }
+                if remoteEnabled && !remoteHost.isEmpty {
+                    LabeledContent("Privacy", value: "Syncs over SSH from your remote host")
+                } else {
+                    LabeledContent("Privacy", value: "100% local — nothing leaves your Mac")
+                }
             }
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
+    }
+}
+
+// MARK: - Remote pane
+
+struct RemotePane: View {
+    @AppStorage(SettingsKeys.remoteSyncEnabled) private var remoteSyncEnabled = false
+    @AppStorage(SettingsKeys.remoteHost) private var remoteHost = ""
+    @AppStorage(SettingsKeys.remotePort) private var remotePort = "22"
+    @AppStorage(SettingsKeys.remoteUser) private var remoteUser = ""
+    @AppStorage(SettingsKeys.remoteKeyPath) private var remoteKeyPath = "~/.ssh/id_rsa"
+    @AppStorage(SettingsKeys.remotePath) private var remotePath = "~/.pi/agent/sessions"
+
+    @State private var testingConnection = false
+    @State private var testResult: String? = nil
+    @State private var testSuccess = false
+
+    var body: some View {
+        Form {
+            Section("Remote Server Connection") {
+                Toggle(isOn: $remoteSyncEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Connect to Remote Server")
+                        Text("Sync session log files from a remote host via SSH/rsync.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+            }
+
+            if remoteSyncEnabled {
+                Section {
+                    TextField("Host", text: $remoteHost,
+                              prompt: Text("e.g. 192.168.1.100"))
+                        .multilineTextAlignment(.trailing)
+
+                    TextField("Port", text: $remotePort, prompt: Text("22"))
+                        .multilineTextAlignment(.trailing)
+
+                    TextField("Username", text: $remoteUser,
+                              prompt: Text("e.g. ubuntu"))
+                        .multilineTextAlignment(.trailing)
+
+                    LabeledContent("SSH Key") {
+                        HStack(spacing: 6) {
+                            TextField("Key path", text: $remoteKeyPath,
+                                      prompt: Text("~/.ssh/id_rsa"))
+                                .multilineTextAlignment(.trailing)
+                                .textFieldStyle(.plain)
+                            Button("Choose…") { chooseSSHKey() }
+                                .controlSize(.small)
+                        }
+                    }
+                } header: {
+                    Text("SSH Connection")
+                } footer: {
+                    Text("On first connection the host's key is trusted automatically (accept-new). Only connect to servers you control.")
+                }
+
+                Section {
+                    TextField("Remote Path", text: $remotePath,
+                              prompt: Text("~/.pi/agent/sessions"))
+                        .multilineTextAlignment(.trailing)
+                } header: {
+                    Text("Remote Pi Directory")
+                } footer: {
+                    Text("The directory on the remote server where Pi session logs are saved.")
+                }
+
+                Section("Connection Status") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 12) {
+                            Button("Test SSH Connection") {
+                                testSSHConnection()
+                            }
+                            .disabled(testingConnection || remoteHost.isEmpty || remoteUser.isEmpty)
+                            .controlSize(.small)
+
+                            if testingConnection {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
+                        }
+
+                        if let result = testResult {
+                            HStack(spacing: 6) {
+                                Image(systemName: testSuccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                                    .foregroundStyle(testSuccess ? .green : .red)
+                                Text(result)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .contentMargins(.top, 8, for: .scrollContent)
+    }
+
+    private func chooseSSHKey() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let sshDir = home.appendingPathComponent(".ssh")
+        if FileManager.default.fileExists(atPath: sshDir.path) {
+            panel.directoryURL = sshDir
+        } else {
+            panel.directoryURL = home
+        }
+        
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                let path = url.path
+                if path.hasPrefix(home.path) {
+                    let relative = path.replacingOccurrences(of: home.path, with: "~")
+                    remoteKeyPath = relative
+                } else {
+                    remoteKeyPath = path
+                }
+            }
+        }
+    }
+
+    private func testSSHConnection() {
+        testingConnection = true
+        testResult = nil
+        testSuccess = false
+
+        Task {
+            do {
+                try await RemoteSync.testConnection(
+                    host: remoteHost,
+                    port: remotePort,
+                    user: remoteUser,
+                    keyPath: remoteKeyPath
+                )
+                await MainActor.run {
+                    testingConnection = false
+                    testSuccess = true
+                    testResult = "Connection successful!"
+                }
+            } catch {
+                await MainActor.run {
+                    testingConnection = false
+                    testSuccess = false
+                    testResult = error.localizedDescription
+                }
+            }
+        }
     }
 }

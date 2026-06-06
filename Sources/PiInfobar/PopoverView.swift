@@ -16,10 +16,18 @@ struct PopoverView: View {
     let onRefresh: () -> Void
     var onSettings: () -> Void = {}
 
+    @AppStorage(SettingsKeys.remoteSyncEnabled) private var remoteSyncEnabled = false
+    @AppStorage(SettingsKeys.remoteHost) private var remoteHost = ""
+    @AppStorage(SettingsKeys.remoteUser) private var remoteUser = ""
+
     @State private var tab: Tab = SettingsStore.defaultTab
     @State private var range: TimeRange = SettingsStore.defaultRange
 
     private var summary: StatsSummary { engine.summary(for: range) }
+
+    private var hasRemoteConfigured: Bool {
+        return !remoteHost.isEmpty && !remoteUser.isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,6 +35,36 @@ struct PopoverView: View {
             Divider().opacity(0.5)
             tabBar
             Divider().opacity(0.5)
+
+            if hasRemoteConfigured {
+                HStack(alignment: .center) {
+                    Label {
+                        Text(remoteSyncEnabled ? "Remote (\(remoteHost))" : "Local Machine")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: remoteSyncEnabled ? "server.rack" : "laptopcomputer")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Picker("", selection: $remoteSyncEnabled) {
+                        Text("Local").tag(false)
+                        Text("Remote").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 120)
+                    .controlSize(.small)
+                    .onChange(of: remoteSyncEnabled) { _, _ in
+                        engine.load(force: true)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                Divider().opacity(0.5)
+            }
 
             if engine.loading && engine.lastUpdated == nil {
                 loadingView
