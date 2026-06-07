@@ -10,15 +10,18 @@
         Background="Transparent"
         ShowInTaskbar="False"
         Topmost="True"
-        TextOptions.TextFormattingMode="Ideal"
-        UseLayoutRounding="True">
+        FontFamily="Segoe UI"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Ideal">
     <Border CornerRadius="14"
             Background="#E61E1E1E"
             BorderBrush="#22FFFFFF"
             BorderThickness="1"
             SnapsToDevicePixels="True">
-        <Grid Margin="0">
+        <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -27,64 +30,65 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Grid Grid.Row="0" Margin="14,12,12,11">
+            <Grid Grid.Row="0" Margin="14,11,12,11">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Path Grid.Column="0"
-                      Data="{x:Static assets:PiLogo.Geometry}"
-                      Fill="White" Stretch="Uniform"
-                      Width="20" Height="20" VerticalAlignment="Center" />
+                <Path Grid.Column="0" Data="{x:Static assets:PiLogo.Geometry}"
+                      Fill="White" Stretch="Uniform" Width="20" Height="20"
+                      VerticalAlignment="Center" />
 
                 <StackPanel Grid.Column="1" Margin="9,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="Pi Stats" Foreground="White"
-                               FontSize="14" FontWeight="Bold" />
-                    <TextBlock x:Name="SubtitleText" Foreground="#99FFFFFF"
-                               FontSize="10" Text="Loading…" />
+                    <TextBlock Text="Pi Stats" Foreground="White" FontSize="14" FontWeight="Bold" />
+                    <TextBlock x:Name="SubtitleText" Foreground="#99FFFFFF" FontSize="10" Text="Loading…" />
                 </StackPanel>
 
-                <Button Grid.Column="2" x:Name="RefreshButton"
-                        Width="26" Height="26" Padding="0"
-                        Background="Transparent" BorderThickness="0"
-                        Foreground="#CCFFFFFF" Cursor="Hand"
-                        ToolTip="Rescan sessions"
-                        Click="RefreshButton_Click">
+                <Border Grid.Column="2" x:Name="RangeContainer"
+                        CornerRadius="7" Background="#10FFFFFF" Padding="2"
+                        VerticalAlignment="Center" Margin="0,0,6,0">
+                    <StackPanel x:Name="RangePanel" Orientation="Horizontal" />
+                </Border>
+
+                <Button Grid.Column="3" x:Name="RefreshButton" Style="{StaticResource Flat}"
+                        Width="26" Height="26" HorizontalContentAlignment="Center"
+                        Foreground="#CCFFFFFF"
+                        ToolTip="Rescan sessions" Click="RefreshButton_Click">
                     <TextBlock Text="&#x21BB;" FontSize="15" />
                 </Button>
             </Grid>
 
             <Border Grid.Row="1" Height="1" Background="#1AFFFFFF" />
 
-            <!-- Body (Step 4: live summary; full tabs come in Step 5) -->
-            <Grid Grid.Row="2">
-                <!-- Loading state -->
-                <StackPanel x:Name="LoadingPanel" VerticalAlignment="Center"
-                            HorizontalAlignment="Center" Visibility="Collapsed">
-                    <ProgressBar x:Name="LoadProgress" Width="180" Height="4"
-                                 Minimum="0" Maximum="1" />
-                    <TextBlock x:Name="LoadingText" Foreground="#99FFFFFF" FontSize="11"
-                               Margin="0,10,0,0" HorizontalAlignment="Center"
-                               Text="Reading Pi sessions…" />
-                </StackPanel>
-
-                <!-- Content -->
-                <StackPanel x:Name="ContentPanel" Margin="14" VerticalAlignment="Top">
-                    <UniformGrid Columns="2" Rows="3" x:Name="CardsGrid" />
-                </StackPanel>
-            </Grid>
+            <!-- Tab bar -->
+            <StackPanel Grid.Row="2" x:Name="TabPanel" Orientation="Horizontal"
+                        Margin="8,0,8,0" />
 
             <Border Grid.Row="3" Height="1" Background="#1AFFFFFF" />
 
+            <!-- Body -->
+            <Grid Grid.Row="4">
+                <StackPanel x:Name="LoadingPanel" VerticalAlignment="Center"
+                            HorizontalAlignment="Center" Visibility="Collapsed">
+                    <ProgressBar x:Name="LoadProgress" Width="180" Height="4" Minimum="0" Maximum="1" />
+                    <TextBlock x:Name="LoadingText" Foreground="#99FFFFFF" FontSize="11"
+                               Margin="0,10,0,0" HorizontalAlignment="Center" Text="Reading Pi sessions…" />
+                </StackPanel>
+
+                <ScrollViewer x:Name="BodyScroll" VerticalScrollBarVisibility="Auto" Padding="0">
+                    <StackPanel x:Name="BodyHost" Margin="14" />
+                </ScrollViewer>
+            </Grid>
+
+            <Border Grid.Row="5" Height="1" Background="#1AFFFFFF" />
+
             <!-- Footer -->
-            <Button Grid.Row="4" x:Name="QuitButton"
-                    Margin="6" Padding="10,7"
-                    HorizontalContentAlignment="Left"
-                    Background="Transparent" BorderThickness="0"
-                    Foreground="#DDFFFFFF" Cursor="Hand"
-                    Click="QuitButton_Click">
+            <Button Grid.Row="6" x:Name="QuitButton" Style="{StaticResource Flat}"
+                    Margin="6" Padding="10,7" HorizontalContentAlignment="Left"
+                    Foreground="#DDFFFFFF" Click="QuitButton_Click">
                 <TextBlock Text="Quit" FontSize="12" />
             </Button>
         </Grid>

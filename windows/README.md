@@ -11,10 +11,18 @@ Work in progress — see the port roadmap below.
 - [x] **2. Models** — DayAgg, Aggregate, StatsSummary, TimeRange
 - [x] **3. Core** — Parser + StatsEngine + LanguageMap (verified vs real logs)
 - [x] **4. Wiring** — engine load, periodic refresh, tray tooltip, live popover cards
-- [ ] 5. UI tabs (Overview, Languages, Models, Projects, Usage) + charts
+- [x] **5. UI tabs** — Overview/Languages/Models/Projects/Usage, range picker,
+      daily-spend bars, language donut, bar rows, token bars (pure WPF)
 - [ ] 6. Settings window + launch-at-login
 - [ ] 7. Remote sync (SSH)
 - [ ] 8. Packaging (.exe / MSIX)
+
+## Dev self-tests
+
+```powershell
+dotnet run -- --dump   # parse real logs, write report to %TEMP%\pistats-dump.txt
+dotnet run -- --shot   # render each tab to %TEMP%\pistats-<tab>.png
+```
 
 ## Data source
 

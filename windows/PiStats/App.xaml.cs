@@ -37,6 +37,14 @@ public partial class App : Application
             return;
         }
 
+        // Render-to-PNG self-test: `dotnet run -- --shot` captures each tab and exits.
+        if (e.Args.Contains("--shot"))
+        {
+            await CaptureShotsAsync();
+            Shutdown();
+            return;
+        }
+
         _engine = new StatsEngine();
         _engine.PropertyChanged += OnEngineChanged;
 
@@ -57,6 +65,29 @@ public partial class App : Application
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(300) };
         _refreshTimer.Tick += async (_, _) => await _engine.LoadAsync();
         _refreshTimer.Start();
+    }
+
+    private static async Task CaptureShotsAsync()
+    {
+        var engine = new StatsEngine();
+        await engine.LoadAsync();
+
+        var win = new PopoverWindow(engine)
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Left = -3000,
+            Top = -3000
+        };
+        win.Show();
+        win.UpdateLayout();
+
+        var dir = Path.GetTempPath();
+        foreach (var tab in new[] { "Overview", "Languages", "Models", "Projects", "Usage" })
+        {
+            win.SelectTab(tab);
+            win.RenderPng(Path.Combine(dir, $"pistats-{tab.ToLowerInvariant()}.png"));
+        }
+        win.Close();
     }
 
     private void OnEngineChanged(object? sender, PropertyChangedEventArgs e)
