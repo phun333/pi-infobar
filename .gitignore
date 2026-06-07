@@ -1,5 +1,12 @@
+# macOS (Swift)
 .build/
 build/
 dist/
 *.xcodeproj
 .DS_Store
+
+# Windows (.NET)
+bin/
+obj/
+*.user
+

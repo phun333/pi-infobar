@@ -1,0 +1,11 @@
+<Application x:Class="PiStats.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Accent color matching the macOS app (system blue-ish) -->
+            <Color x:Key="AccentColor">#4D7CFF</Color>
+            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
