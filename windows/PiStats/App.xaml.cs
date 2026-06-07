@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using H.NotifyIcon;
@@ -14,6 +15,24 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Headless self-test: `dotnet run -- --dump` writes a report and exits.
+        if (e.Args.Contains("--dump"))
+        {
+            try
+            {
+                var report = Core.Diagnostics.Dump();
+                var outPath = Path.Combine(Path.GetTempPath(), "pistats-dump.txt");
+                File.WriteAllText(outPath, report);
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(Path.Combine(Path.GetTempPath(), "pistats-dump.txt"),
+                    "ERROR: " + ex);
+            }
+            Shutdown();
+            return;
+        }
 
         // Tray icon (the macOS NSStatusItem equivalent).
         _tray = new TaskbarIcon
