@@ -4,15 +4,19 @@
 
 # Pi Stats
 
-**A native macOS menu-bar dashboard for your [Pi](https://pi.dev) agent usage.**
+**A native menu-bar / system-tray dashboard for your [Pi](https://pi.dev) agent usage.**
 
 See your total spend, the languages you actually code in, model costs, projects
 and token usage — all computed locally from your session logs. Local by default,
 with optional SSH sync from your own remote Pi server.
 
-<a href="https://github.com/phun333/pi-infobar/releases/tag/v0.2.0"><img src="https://img.shields.io/badge/download-v0.2.0-4D7CFF?style=flat-square" alt="Download v0.2.0" /></a>
-<img src="https://img.shields.io/badge/platform-macOS%2014%2B-111?style=flat-square" alt="macOS 14+" />
-<img src="https://img.shields.io/badge/built%20with-SwiftUI-F05138?style=flat-square&logo=swift&logoColor=white" alt="SwiftUI" />
+> **Available on macOS *and* Windows** — same data, same design.
+> The macOS app (SwiftUI) lives in [`macos/`](macos/); the Windows app (WPF)
+> lives in [`windows/`](windows/).
+
+<a href="https://github.com/phun333/pi-infobar/releases/tag/v0.3.0"><img src="https://img.shields.io/badge/download-v0.3.0-4D7CFF?style=flat-square" alt="Download v0.3.0" /></a>
+<img src="https://img.shields.io/badge/platform-macOS%2014%2B%20%7C%20Windows%2010%2F11-111?style=flat-square" alt="macOS 14+ | Windows 10/11" />
+<img src="https://img.shields.io/badge/built%20with-SwiftUI%20%2B%20WPF-F05138?style=flat-square" alt="SwiftUI + WPF" />
 <img src="https://img.shields.io/badge/privacy-local--first-4EAA25?style=flat-square" alt="local-first" />
 
 </div>
@@ -43,56 +47,79 @@ with optional SSH sync from your own remote Pi server.
 - **Languages** — donut + ranked bars by lines written (TypeScript, Python, Swift, Go…).
 - **Models, Projects, Tokens & Tools** — cost and counts, per item.
 - **Time ranges** — `1d / 7d / 30d / All` across every tab.
-- **Native** — translucent rounded panel, ⌘Q, launch-at-login, Settings window.
-- **Remote (optional)** — sync session logs from your own server over SSH/rsync, then browse them locally; flip between Local and Remote from the popover.
-- **Private** — local by default (reads only `~/.pi/agent/sessions`, no network). Remote mode only pulls logs from the host *you* configure — nothing is ever uploaded.
+- **Native** — translucent rounded panel, launch-at-login, Settings window. Menu bar on macOS, system tray on Windows.
+- **Remote (optional)** — sync session logs from your own server over SSH, then browse them locally; flip between Local and Remote from the popover.
+- **Private** — local by default (reads only your `~/.pi/agent/sessions`, no network). Remote mode only pulls logs from the host *you* configure — nothing is ever uploaded.
+- **Cross-platform** — identical feature set on macOS and Windows.
 
 ## Download
+
+Grab the latest from the **[v0.3.0 release](https://github.com/phun333/pi-infobar/releases/tag/v0.3.0)**.
+
+### 🤖 macOS
 
 The app is **unsigned** (no paid Apple Developer account), so macOS quarantines it on
 download and may say *“Pi Stats is damaged and can’t be opened”*. That's Gatekeeper, not
 a broken app — you just have to clear the quarantine flag once.
 
-### Easiest: one-line install
-
-Paste this into **Terminal** — it downloads, installs to Applications, unquarantines, and opens:
+**Easiest — one-line install.** Paste into **Terminal** (downloads, installs, unquarantines, opens):
 
 ```bash
-curl -L https://github.com/phun333/pi-infobar/releases/download/v0.2.0/Pi-Stats.zip -o /tmp/PiStats.zip && \
+curl -L https://github.com/phun333/pi-infobar/releases/download/v0.3.0/Pi-Stats.zip -o /tmp/PiStats.zip && \
   ditto -xk /tmp/PiStats.zip /Applications && \
   xattr -dr com.apple.quarantine "/Applications/Pi Stats.app" && \
   open "/Applications/Pi Stats.app"
 ```
 
-### Manual
+**Manual.** Download **`Pi-Stats.dmg`**, drag **Pi Stats** into **Applications**, then run
+`xattr -dr com.apple.quarantine "/Applications/Pi Stats.app"` once and open it. The **π**
+mark appears in your menu bar. Universal binary (Apple Silicon + Intel).
 
-1. Download **[`Pi-Stats.dmg`](https://github.com/phun333/pi-infobar/releases/tag/v0.2.0)**,
-   open it, drag **Pi Stats** into **Applications**. (If you already opened it and it got
-   moved to Trash, put it back in Applications first — don't double-click yet.)
-2. Run this once to clear the quarantine flag:
-   ```bash
-   xattr -dr com.apple.quarantine "/Applications/Pi Stats.app"
-   ```
-3. Now open it normally. The **π** mark appears in your menu bar.
-   Universal binary (Apple Silicon + Intel).
+### 🪟 Windows
+
+1. Download **`PiStats.exe`** (single portable file — no installer, no .NET required).
+2. Double-click it. The **π** icon appears in your system tray.
+
+Because the app is **unsigned**, Windows SmartScreen may show *“Windows protected your
+PC”* on first launch. Click **More info → Run anyway** (one time). It's not malware —
+just the Windows equivalent of macOS Gatekeeper.
+
+**Start with Windows / install for real:** clone the repo and run
+`windows\install.ps1` (copies the exe to `%LOCALAPPDATA%\PiStats`, adds a Start-Menu
+shortcut, and enables auto-start at sign-in). Remove it any time with
+`windows\uninstall.ps1`. Or just enable **Settings → General → Launch at login** in-app.
+
+> Remote sync on Windows uses the built-in OpenSSH client (`ssh.exe`) + `tar.exe`
+> (both ship with Windows 10/11).
 
 ## How it works
 
-Streams every `~/.pi/agent/sessions/**/*.jsonl`, aggregates per day, and caches the
-result. Cost comes from each message's recorded `usage.cost` (no estimates); languages
-from the file extension of every `edit`/`write`; projects from each session's `cwd`.
+Streams every `~/.pi/agent/sessions/**/*.jsonl` (`%USERPROFILE%\.pi\agent\sessions`
+on Windows), aggregates per day, and caches the result. Cost comes from each message's
+recorded `usage.cost` (no estimates); languages from the file extension of every
+`edit`/`write`; projects from each session's `cwd`.
 
-**Remote mode** (optional) uses `rsync` over SSH to pull the matching `*.jsonl` files
-from a server you configure in Settings into a separate local cache, then runs the exact
-same local aggregation. Data only ever flows from your host to your Mac — never out.
+**Remote mode** (optional) pulls the matching `*.jsonl` files from a server you configure
+in Settings into a separate local cache, then runs the exact same local aggregation
+(macOS uses `rsync`; Windows streams a `tar` over `ssh`). Data only ever flows from your
+host to your machine — never out.
 
 ## Build
 
-Swift 6 toolchain (Command Line Tools, no full Xcode):
+**macOS** — Swift 6 toolchain (Command Line Tools, no full Xcode):
 
 ```bash
+cd macos
 ./build_app.sh && open "build/Pi Stats.app"   # build + run
-./release.sh v0.2.0                            # package DMG/zip + GitHub release
+./release.sh v0.3.0                            # package DMG/zip + GitHub release
+```
+
+**Windows** — .NET 8 SDK:
+
+```powershell
+cd windows
+dotnet run --project PiStats   # dev run (system tray)
+.\build.ps1                     # -> windows\dist\PiStats.exe (single file)
 ```
 
 ## License
