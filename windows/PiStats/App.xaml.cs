@@ -38,6 +38,18 @@ public partial class App : Application
             return;
         }
 
+        // Generate the app icon: `dotnet run -- --makeicon <path>` then exit.
+        if (e.Args.Contains("--makeicon"))
+        {
+            var idx = Array.IndexOf(e.Args, "--makeicon");
+            var outPath = idx >= 0 && idx + 1 < e.Args.Length
+                ? e.Args[idx + 1]
+                : Path.Combine(Path.GetTempPath(), "AppIcon.ico");
+            PiLogo.WriteIcoFile(outPath);
+            Shutdown();
+            return;
+        }
+
         // Render-to-PNG self-test: `dotnet run -- --shot` captures each tab and exits.
         if (e.Args.Contains("--shot"))
         {

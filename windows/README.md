@@ -19,7 +19,11 @@ Work in progress — see the port roadmap below.
 - [x] **7. Remote sync** — SSH pull of *.jsonl over ssh.exe + tar.exe (no
       rsync needed), Local/Remote switch in popover, Test Connection +
       key picker in settings, separate remote cache
-- [ ] 8. Packaging (.exe / MSIX)
+- [x] **8. Packaging** — embedded app icon (π squircle), single-file
+      self-contained .exe via `build.ps1`
+
+**The Windows port is feature-complete** — a faithful reproduction of the
+macOS app.
 
 ## Remote sync requirements
 
@@ -38,7 +42,7 @@ dotnet run -- --shot   # render each tab to %TEMP%\pistats-<tab>.png
 
 Reads `%USERPROFILE%\.pi\agent\sessions\**\*.jsonl` — identical format to macOS.
 
-## Build & run
+## Run (dev)
 
 Requires the .NET 8 SDK:
 
@@ -48,5 +52,16 @@ dotnet run        # launches into the system tray (π icon)
 ```
 
 Left-click the tray icon to toggle the popover; right-click for the menu.
+
+## Build a distributable .exe
+
+```powershell
+cd windows
+.\build.ps1                    # self-contained single .exe (no .NET needed)
+.\build.ps1 -FrameworkDependent  # small .exe, needs .NET 8 Desktop Runtime
+```
+
+The result is `windows\dist\PiStats.exe` — a single portable file you can
+double-click or drop in your Startup folder.
 
 See the [root README](../README.md) for the overall project.

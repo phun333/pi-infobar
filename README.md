@@ -4,11 +4,14 @@
 
 # Pi Stats
 
-**A native macOS menu-bar dashboard for your [Pi](https://pi.dev) agent usage.**
+**A native menu-bar / system-tray dashboard for your [Pi](https://pi.dev) agent usage.**
 
 See your total spend, the languages you actually code in, model costs, projects
 and token usage — all computed locally from your session logs. Local by default,
 with optional SSH sync from your own remote Pi server.
+
+> **Now on Windows too.** A native WPF port lives in [`windows/`](windows/) —
+> same data, same design. The macOS app is in [`macos/`](macos/).
 
 <a href="https://github.com/phun333/pi-infobar/releases/tag/v0.2.0"><img src="https://img.shields.io/badge/download-v0.2.0-4D7CFF?style=flat-square" alt="Download v0.2.0" /></a>
 <img src="https://img.shields.io/badge/platform-macOS%2014%2B-111?style=flat-square" alt="macOS 14+" />
