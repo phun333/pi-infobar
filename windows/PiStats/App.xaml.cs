@@ -49,14 +49,19 @@ public partial class App : Application
         _engine = new StatsEngine();
         _engine.PropertyChanged += OnEngineChanged;
 
-        // Tray icon (the macOS NSStatusItem equivalent).
+        // Tray icon (the macOS NSStatusItem equivalent). Pick a color that
+        // stays visible: dark glyph on a light taskbar, white on a dark one.
+        var iconColor = SystemTheme.IsLightTaskbar
+            ? Color.FromRgb(0x20, 0x20, 0x20)
+            : Colors.White;
         _tray = new TaskbarIcon
         {
             ToolTipText = "Pi Stats",
-            Icon = PiLogo.RenderTrayIcon(32, Colors.White),
+            Icon = PiLogo.RenderTrayIcon(32, iconColor),
         };
         _tray.TrayLeftMouseUp += (_, _) => TogglePopover();
         _tray.TrayRightMouseUp += (_, _) => ShowTrayMenu();
+        _tray.ForceCreate(); // register the Win32 icon (required when built in code)
 
         _popover = new PopoverWindow(_engine)
         {

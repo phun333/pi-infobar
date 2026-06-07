@@ -24,6 +24,19 @@ public static class WindowEffects
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    /// <summary>
+    /// Force this window to the foreground so the tray overflow flyout (the
+    /// "show hidden icons" panel) dismisses behind it instead of lingering.
+    /// </summary>
+    public static void BringToForeground(Window window)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        if (hwnd != IntPtr.Zero) SetForegroundWindow(hwnd);
+    }
+
     /// <summary>Apply rounded corners + acrylic backdrop. No-ops gracefully on older Windows.</summary>
     public static void ApplyAcrylic(Window window)
     {

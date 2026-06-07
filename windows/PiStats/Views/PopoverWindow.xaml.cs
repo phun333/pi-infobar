@@ -93,16 +93,18 @@ public partial class PopoverWindow : Window
             };
             var underline = new Border
             {
-                Height = 2, Background = Brushes.Transparent,
-                VerticalAlignment = VerticalAlignment.Bottom
+                Height = 2.5, CornerRadius = new CornerRadius(1.5),
+                Background = Brushes.Transparent,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(0, 6, 0, 0)
             };
-            var inner = new Grid();
+            var inner = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
             inner.Children.Add(text);
             inner.Children.Add(underline);
 
             var tab = new Border
             {
-                Width = tabWidth, Padding = new Thickness(0, 8, 0, 8),
+                Width = tabWidth, Padding = new Thickness(0, 9, 0, 7),
                 Background = Brushes.Transparent, Cursor = Cursors.Hand,
                 Child = inner
             };
@@ -166,6 +168,7 @@ public partial class PopoverWindow : Window
         Show();
         Activate();
         Topmost = true;
+        WindowEffects.BringToForeground(this); // dismiss the tray overflow flyout
         RefreshUi();
     }
 
