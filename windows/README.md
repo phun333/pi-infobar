@@ -16,8 +16,16 @@ Work in progress — see the port roadmap below.
 - [x] **6. Settings** — settings window (Menu Bar/General/Remote/About),
       JSON-backed SettingsStore, launch-at-login via HKCU Run key,
       gear button + tray menu, metric-driven tray tooltip
-- [ ] 7. Remote sync (SSH)
+- [x] **7. Remote sync** — SSH pull of *.jsonl over ssh.exe + tar.exe (no
+      rsync needed), Local/Remote switch in popover, Test Connection +
+      key picker in settings, separate remote cache
 - [ ] 8. Packaging (.exe / MSIX)
+
+## Remote sync requirements
+
+Uses the built-in Windows **OpenSSH client** (`ssh.exe`) and **`tar.exe`**
+(both ship with Windows 10/11). If `ssh` is missing, install it via
+*Settings → Apps → Optional features → OpenSSH Client*.
 
 ## Dev self-tests
 

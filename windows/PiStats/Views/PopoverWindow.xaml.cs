@@ -7,6 +7,7 @@ using PiStats.Controls;
 using PiStats.Core;
 using PiStats.Interop;
 using PiStats.Models;
+using PiStats.Services;
 
 namespace PiStats.Views;
 
@@ -34,6 +35,7 @@ public partial class PopoverWindow : Window
 
         BuildRangePicker();
         BuildTabBar();
+        BuildSourceToggle();
 
         Deactivated += (_, _) => HidePopover();
         SourceInitialized += (_, _) => WindowEffects.ApplyAcrylic(this);
@@ -127,6 +129,60 @@ public partial class PopoverWindow : Window
         }
     }
 
+    // MARK: - Local / Remote source toggle
+
+    private readonly List<(Border chip, bool remote, TextBlock text)> _sourceChips = new();
+    private readonly SettingsStore _settings = SettingsStore.Shared;
+
+    private bool HasRemoteConfigured =>
+        !string.IsNullOrWhiteSpace(_settings.RemoteHost) &&
+        !string.IsNullOrWhiteSpace(_settings.RemoteUser);
+
+    private void BuildSourceToggle()
+    {
+        foreach (var (label, remote) in new[] { ("Local", false), ("Remote", true) })
+        {
+            var text = new TextBlock
+            {
+                Text = label, FontSize = 10.5, FontWeight = FontWeights.SemiBold,
+                Foreground = Secondary,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            var chip = new Border
+            {
+                CornerRadius = new CornerRadius(5),
+                Background = Brushes.Transparent,
+                Padding = new Thickness(10, 3, 10, 3),
+                Cursor = Cursors.Hand,
+                Child = text
+            };
+            var captured = remote;
+            chip.MouseLeftButtonUp += async (_, _) =>
+            {
+                if (_settings.RemoteSyncEnabled == captured) return;
+                _settings.RemoteSyncEnabled = captured;
+                UpdateSourceStyles();
+                await _engine.LoadAsync(force: true);
+            };
+            _sourceChips.Add((chip, remote, text));
+            SourceToggle.Children.Add(chip);
+        }
+        UpdateSourceStyles();
+    }
+
+    private void UpdateSourceStyles()
+    {
+        bool remoteOn = _settings.RemoteSyncEnabled;
+        foreach (var (chip, remote, text) in _sourceChips)
+        {
+            bool sel = remote == remoteOn;
+            chip.Background = sel ? AccentBrush : Brushes.Transparent;
+            text.Foreground = sel ? Brushes.White : Secondary;
+        }
+        SourceLabel.Text = remoteOn ? $"Remote ({_settings.RemoteHost})" : "Local Machine";
+    }
+
     // MARK: - Engine updates
 
     private void OnEngineChanged(object? sender, PropertyChangedEventArgs e)
@@ -144,6 +200,9 @@ public partial class PopoverWindow : Window
         SubtitleText.Text = _engine.Loading
             ? "Updating…"
             : _engine.LastUpdated is { } d ? $"Updated {d:t}" : "";
+
+        RemoteBar.Visibility = HasRemoteConfigured ? Visibility.Visible : Visibility.Collapsed;
+        if (HasRemoteConfigured) UpdateSourceStyles();
 
         if (!firstLoad) RebuildBody();
     }

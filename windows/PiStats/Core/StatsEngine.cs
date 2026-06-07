@@ -25,10 +25,14 @@ public sealed partial class StatsEngine : INotifyPropertyChanged
 
     private List<DayAgg> _days = new();
 
-    // MARK: - Paths (remote toggle wired in a later step; local for now)
+    // MARK: - Paths (switch between local and remote-synced data)
 
-    public static string SessionsDir => PiPaths.LocalSessionsDir;
-    public static string CacheFile => PiPaths.LocalCacheFile;
+    private static bool RemoteEnabled => Services.SettingsStore.Shared.RemoteSyncEnabled;
+
+    public static string SessionsDir =>
+        RemoteEnabled ? PiPaths.RemoteSessionsDir : PiPaths.LocalSessionsDir;
+    public static string CacheFile =>
+        RemoteEnabled ? PiPaths.RemoteCacheFile : PiPaths.LocalCacheFile;
 
     // MARK: - Loading
 
@@ -40,8 +44,24 @@ public sealed partial class StatsEngine : INotifyPropertyChanged
 
         try
         {
+            if (RemoteEnabled)
+            {
+                try
+                {
+                    await PerformRemoteSyncAsync();
+                }
+                catch (Exception ex)
+                {
+                    // Fall back to cached remote data if the sync fails.
+                    if (!System.IO.File.Exists(CacheFile)) throw;
+                    System.Diagnostics.Debug.WriteLine($"Remote sync failed: {ex.Message}. Using cache.");
+                }
+            }
+
+            var sessionsDir = SessionsDir;
+            var cacheFile = CacheFile;
             var agg = await Task.Run(() =>
-                SessionParser.BuildAggregate(SessionsDir, CacheFile, force,
+                SessionParser.BuildAggregate(sessionsDir, cacheFile, force,
                     p => Progress = p));
 
             _days = agg.Days;
@@ -59,6 +79,20 @@ public sealed partial class StatsEngine : INotifyPropertyChanged
     }
 
     public StatsSummary Summary(TimeRange range) => Summarize(_days, range);
+
+    // MARK: - Remote sync
+
+    public static async Task PerformRemoteSyncAsync()
+    {
+        var s = Services.SettingsStore.Shared;
+        await Services.RemoteSync.SyncAsync(
+            host: s.RemoteHost,
+            port: s.RemotePort,
+            user: s.RemoteUser,
+            keyPath: s.RemoteKeyPath,
+            remotePath: string.IsNullOrWhiteSpace(s.RemotePath) ? "~/.pi/agent/sessions" : s.RemotePath,
+            localPath: PiPaths.RemoteSessionsDir);
+    }
 
     // MARK: - Today metrics (for the tray title)
 

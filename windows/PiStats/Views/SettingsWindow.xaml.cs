@@ -121,11 +121,13 @@ public partial class SettingsWindow : Window
             TextFieldRow("Host", _s.RemoteHost, v => _s.RemoteHost = v, "e.g. 192.168.1.100"),
             TextFieldRow("Port", _s.RemotePort, v => _s.RemotePort = v, "22"),
             TextFieldRow("Username", _s.RemoteUser, v => _s.RemoteUser = v, "e.g. ubuntu"),
-            TextFieldRow("SSH key path", _s.RemoteKeyPath, v => _s.RemoteKeyPath = v, @"C:\Users\you\.ssh\id_rsa"),
+            KeyFieldRow(),
             TextFieldRow("Remote path", _s.RemotePath, v => _s.RemotePath = v, "~/.pi/agent/sessions")
         ));
 
-        Add(Note("Full sync / connection test is enabled in a later build step; values here are saved."));
+        Add(SectionLabel("CONNECTION", topMargin: 20));
+        Add(Group(ConnectionTestRow()));
+        Add(Note("On first connection the host key is trusted automatically (accept-new). Only connect to servers you control. Pulls *.jsonl logs over SSH — nothing is uploaded."));
     }
 
     private void BuildAboutPane()
@@ -262,6 +264,100 @@ public partial class SettingsWindow : Window
             if (idx >= 0 && idx < items.Count) onChange(items[idx].value);
         };
         return Row(title, subtitle, combo);
+    }
+
+    private TextBox? _keyBox;
+
+    private UIElement KeyFieldRow()
+    {
+        var panel = new StackPanel { Margin = new Thickness(14, 10, 14, 10) };
+        panel.Children.Add(Text("SSH key path", 12, FontWeights.Normal, Secondary));
+
+        var grid = new Grid { Margin = new Thickness(0, 5, 0, 0) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        _keyBox = new TextBox
+        {
+            Text = _s.RemoteKeyPath,
+            Style = (Style)FindResource("DarkText")
+        };
+        _keyBox.LostFocus += (_, _) => _s.RemoteKeyPath = _keyBox.Text;
+        Grid.SetColumn(_keyBox, 0);
+        grid.Children.Add(_keyBox);
+
+        var choose = new Button
+        {
+            Content = "Choose…",
+            Style = (Style)FindResource("SubtleButton"),
+            Margin = new Thickness(8, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Stretch
+        };
+        choose.Click += (_, _) => ChooseKey();
+        Grid.SetColumn(choose, 1);
+        grid.Children.Add(choose);
+
+        panel.Children.Add(grid);
+        return panel;
+    }
+
+    private void ChooseKey()
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Select SSH private key",
+            CheckFileExists = true
+        };
+        var sshDir = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".ssh");
+        if (System.IO.Directory.Exists(sshDir)) dlg.InitialDirectory = sshDir;
+        if (dlg.ShowDialog(this) == true)
+        {
+            _s.RemoteKeyPath = dlg.FileName;
+            if (_keyBox != null) _keyBox.Text = dlg.FileName;
+        }
+    }
+
+    private UIElement ConnectionTestRow()
+    {
+        var panel = new StackPanel { Margin = new Thickness(14, 12, 14, 12) };
+
+        var status = new TextBlock
+        {
+            FontSize = 11.5, Margin = new Thickness(0, 8, 0, 0),
+            TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed
+        };
+
+        var btn = new Button
+        {
+            Content = "Test SSH Connection",
+            Style = (Style)FindResource("AccentButton"),
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+        btn.Click += async (_, _) =>
+        {
+            btn.IsEnabled = false;
+            status.Visibility = Visibility.Visible;
+            status.Foreground = Secondary;
+            status.Text = "Testing…";
+            try
+            {
+                await Services.RemoteSync.TestConnectionAsync(
+                    _s.RemoteHost, _s.RemotePort, _s.RemoteUser, _s.RemoteKeyPath);
+                status.Foreground = new SolidColorBrush(Color.FromRgb(0x6F, 0xCF, 0x73));
+                status.Text = "✓  Connection successful!";
+            }
+            catch (Exception ex)
+            {
+                status.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x6B, 0x6B));
+                status.Text = "✕  " + ex.Message;
+            }
+            finally { btn.IsEnabled = true; }
+        };
+
+        panel.Children.Add(btn);
+        panel.Children.Add(status);
+        return panel;
     }
 
     private UIElement TextFieldRow(string title, string value, Action<string> onChange, string placeholder)

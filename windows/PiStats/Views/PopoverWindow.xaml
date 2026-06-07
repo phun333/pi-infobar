@@ -112,6 +112,28 @@
 
             <!-- Body -->
             <Grid Grid.Row="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Local / Remote source switch (shown when remote is configured) -->
+                <Border x:Name="RemoteBar" Grid.Row="0" Visibility="Collapsed"
+                        Padding="14,7" Background="#0AFFFFFF">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="SourceLabel" Grid.Column="0" Foreground="#99FFFFFF"
+                                   FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Border Grid.Column="1" CornerRadius="6" Background="#10FFFFFF" Padding="2">
+                            <StackPanel x:Name="SourceToggle" Orientation="Horizontal" />
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1">
                 <StackPanel x:Name="LoadingPanel" VerticalAlignment="Center"
                             HorizontalAlignment="Center" Visibility="Collapsed">
                     <ProgressBar x:Name="LoadProgress" Width="180" Height="4" Minimum="0" Maximum="1" />
@@ -122,6 +144,7 @@
                 <ScrollViewer x:Name="BodyScroll" VerticalScrollBarVisibility="Auto" Padding="0">
                     <StackPanel x:Name="BodyHost" Margin="14" />
                 </ScrollViewer>
+                </Grid>
             </Grid>
 
             <Border Grid.Row="5" Height="1" Background="#1AFFFFFF" />
