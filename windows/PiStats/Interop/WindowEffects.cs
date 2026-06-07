@@ -11,6 +11,7 @@ namespace PiStats.Interop;
 public static class WindowEffects
 {
     // DwmSetWindowAttribute attributes (dwmapi.h)
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
 
@@ -35,6 +36,15 @@ public static class WindowEffects
     {
         var hwnd = new WindowInteropHelper(window).Handle;
         if (hwnd != IntPtr.Zero) SetForegroundWindow(hwnd);
+    }
+
+    /// <summary>Give a normal (titled) window a dark title bar.</summary>
+    public static void EnableDarkTitleBar(Window window)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        if (hwnd == IntPtr.Zero) return;
+        int on = 1;
+        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref on, sizeof(int));
     }
 
     /// <summary>Apply rounded corners + acrylic backdrop. No-ops gracefully on older Windows.</summary>

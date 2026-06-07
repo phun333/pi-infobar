@@ -274,9 +274,18 @@ public static class UiBuilder
         foreach (var d in data)
         {
             double frac = d.Cost / maxCost;
-            var cell = new Grid { Margin = new Thickness(0.6, 0, 0.6, 0) };
-            cell.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            cell.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            // Full-height transparent cell so hovering anywhere in the column
+            // (not just the thin bar) shows that day's spend.
+            var cell = new Grid
+            {
+                Margin = new Thickness(0.6, 0, 0.6, 0),
+                Background = Brushes.Transparent,
+                ToolTip = ChartTooltip(d)
+            };
+            ToolTipService.SetInitialShowDelay(cell, 80);
+            ToolTipService.SetBetweenShowDelay(cell, 0);
+            ToolTipService.SetPlacement(cell, System.Windows.Controls.Primitives.PlacementMode.Top);
 
             var bar = new Border
             {
@@ -284,15 +293,42 @@ public static class UiBuilder
                 CornerRadius = new CornerRadius(2, 2, 0, 0),
                 VerticalAlignment = VerticalAlignment.Bottom,
                 Height = Math.Max(d.Cost > 0 ? 2 : 0, frac * (height - 4)),
-                ToolTip = $"{d.Day:ddd, MMM d}\n{Fmt.Money(d.Cost)}"
+                IsHitTestVisible = false
             };
-            Grid.SetRow(bar, 0);
             cell.Children.Add(bar);
             bars.Children.Add(cell);
         }
 
         container.Children.Add(bars);
         return container;
+    }
+
+    /// Dark, styled tooltip showing a day's date + spend (matches the panel).
+    private static ToolTip ChartTooltip(DaySpend d)
+    {
+        var stack = new StackPanel();
+        stack.Children.Add(new TextBlock
+        {
+            Text = d.Day.ToString("ddd, MMM d"),
+            Foreground = W(0xAA), FontSize = 10, FontWeight = FontWeights.Medium
+        });
+        stack.Children.Add(new TextBlock
+        {
+            Text = Fmt.Money(d.Cost),
+            Foreground = Solid(Color.FromRgb(0x6F, 0xCF, 0x73)),
+            FontSize = 13, FontWeight = FontWeights.Bold,
+            Margin = new Thickness(0, 1, 0, 0)
+        });
+
+        return new ToolTip
+        {
+            Background = Solid(Color.FromRgb(0x2A, 0x2A, 0x2A)),
+            BorderBrush = W(0x22),
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(9, 6, 9, 6),
+            HasDropShadow = true,
+            Content = stack
+        };
     }
 
     // MARK: - Donut chart (language share)
