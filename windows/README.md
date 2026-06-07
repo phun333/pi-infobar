@@ -13,7 +13,9 @@ Work in progress — see the port roadmap below.
 - [x] **4. Wiring** — engine load, periodic refresh, tray tooltip, live popover cards
 - [x] **5. UI tabs** — Overview/Languages/Models/Projects/Usage, range picker,
       daily-spend bars, language donut, bar rows, token bars (pure WPF)
-- [ ] 6. Settings window + launch-at-login
+- [x] **6. Settings** — settings window (Menu Bar/General/Remote/About),
+      JSON-backed SettingsStore, launch-at-login via HKCU Run key,
+      gear button + tray menu, metric-driven tray tooltip
 - [ ] 7. Remote sync (SSH)
 - [ ] 8. Packaging (.exe / MSIX)
 

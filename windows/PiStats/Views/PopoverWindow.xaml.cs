@@ -17,8 +17,11 @@ public partial class PopoverWindow : Window
     private static readonly SolidColorBrush Secondary = new(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF));
 
     private readonly StatsEngine _engine;
-    private TimeRange _range = TimeRange.All;
-    private string _tab = "Overview";
+    private TimeRange _range = Services.SettingsStore.Shared.DefaultRange;
+    private string _tab = Services.SettingsStore.Shared.DefaultTab;
+
+    /// Set by App to open the Settings window.
+    public Action? OnSettings { get; set; }
 
     private readonly List<(Border chip, TimeRange range, TextBlock text)> _rangeChips = new();
     private readonly List<(Border tab, string name, TextBlock text, Border underline)> _tabItems = new();
@@ -195,6 +198,12 @@ public partial class PopoverWindow : Window
 
     private async void RefreshButton_Click(object sender, RoutedEventArgs e)
         => await _engine.LoadAsync(force: true);
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        HidePopover();
+        OnSettings?.Invoke();
+    }
 
     private void QuitButton_Click(object sender, RoutedEventArgs e)
         => Application.Current.Shutdown();

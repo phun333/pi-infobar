@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using H.NotifyIcon;
 using PiStats.Assets;
 using PiStats.Core;
+using PiStats.Services;
 using PiStats.Views;
 
 namespace PiStats;
@@ -57,7 +58,10 @@ public partial class App : Application
         _tray.TrayLeftMouseUp += (_, _) => TogglePopover();
         _tray.TrayRightMouseUp += (_, _) => ShowTrayMenu();
 
-        _popover = new PopoverWindow(_engine);
+        _popover = new PopoverWindow(_engine)
+        {
+            OnSettings = () => SettingsWindow.Open()
+        };
 
         // Initial load + periodic refresh (macOS uses a 300s timer).
         await _engine.LoadAsync();
@@ -88,6 +92,22 @@ public partial class App : Application
             win.RenderPng(Path.Combine(dir, $"pistats-{tab.ToLowerInvariant()}.png"));
         }
         win.Close();
+
+        var settings = new SettingsWindow
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Left = -3000,
+            Top = -3000
+        };
+        settings.Show();
+        settings.UpdateLayout();
+        string[] paneNames = { "menubar", "general", "remote", "about" };
+        for (int i = 0; i < paneNames.Length; i++)
+        {
+            settings.SelectPane(i);
+            settings.RenderPng(Path.Combine(dir, $"pistats-settings-{paneNames[i]}.png"));
+        }
+        settings.Close();
     }
 
     private void OnEngineChanged(object? sender, PropertyChangedEventArgs e)
@@ -95,11 +115,24 @@ public partial class App : Application
         if (_engine == null || _tray == null) return;
         Dispatcher.Invoke(() =>
         {
-            var today = _engine.TodayCost;
             _tray.ToolTipText = _engine.Loading
                 ? "Pi Stats — updating…"
-                : $"Pi Stats — ${today:F2} today";
+                : $"Pi Stats — {MetricText()}";
         });
+    }
+
+    private string MetricText()
+    {
+        if (_engine == null) return "";
+        return SettingsStore.Shared.MenuBarMetric switch
+        {
+            MenuBarMetric.TodayCost => $"${_engine.TodayCost:F2} today",
+            MenuBarMetric.TotalCost => $"{Fmt.Money(_engine.TotalCostAll)} total",
+            MenuBarMetric.TodayLines => $"{Fmt.Int(_engine.TodayLines)} ln today",
+            MenuBarMetric.TodayMessages => $"{Fmt.Int(_engine.TodayMessages)} msg today",
+            MenuBarMetric.TodaySessions => $"{_engine.TodaySessions} sess today",
+            _ => "Pi Stats"
+        };
     }
 
     private void TogglePopover()
@@ -114,7 +147,7 @@ public partial class App : Application
         var menu = new System.Windows.Controls.ContextMenu();
 
         var settings = new System.Windows.Controls.MenuItem { Header = "Settings…" };
-        settings.Click += (_, _) => { /* TODO: settings window (Step 7) */ };
+        settings.Click += (_, _) => SettingsWindow.Open();
 
         var refresh = new System.Windows.Controls.MenuItem { Header = "Refresh" };
         refresh.Click += async (_, _) => { if (_engine != null) await _engine.LoadAsync(force: true); };

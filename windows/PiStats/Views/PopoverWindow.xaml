@@ -36,6 +36,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <Path Grid.Column="0" Data="{x:Static assets:PiLogo.Geometry}"
@@ -58,6 +59,13 @@
                         Foreground="#CCFFFFFF"
                         ToolTip="Rescan sessions" Click="RefreshButton_Click">
                     <TextBlock Text="&#x21BB;" FontSize="15" />
+                </Button>
+
+                <Button Grid.Column="4" x:Name="SettingsButton" Style="{StaticResource Flat}"
+                        Width="26" Height="26" HorizontalContentAlignment="Center"
+                        Foreground="#CCFFFFFF"
+                        ToolTip="Settings" Click="SettingsButton_Click">
+                    <TextBlock Text="&#x2699;" FontSize="15" />
                 </Button>
             </Grid>
 
