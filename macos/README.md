@@ -8,7 +8,7 @@ Swift 6 toolchain (Command Line Tools, no full Xcode):
 
 ```bash
 ./build_app.sh && open "build/Pi Stats.app"   # build + run
-./release.sh v0.2.0                            # package DMG/zip + GitHub release
+./release.sh v0.3.0                            # package DMG/zip + GitHub release
 ```
 
 See the [root README](../README.md) for features and screenshots.
