@@ -8,14 +8,13 @@ A faithful port of the macOS app: same data, same design language.
 Work in progress — see the port roadmap below.
 
 - [x] **1. Scaffold** — tray icon (π), translucent rounded popover, build pipeline
-- [ ] 2. Models (DayAgg, Aggregate, StatsSummary, TimeRange)
-- [ ] 3. Parser + StatsEngine (JSONL → aggregates, cache, summarize)
-- [ ] 4. LanguageMap (extension → language, colors, icons)
-- [ ] 5. Tray + popover wiring (live menu-bar metric)
-- [ ] 6. UI tabs (Overview, Languages, Models, Projects, Usage) + charts
-- [ ] 7. Settings window + launch-at-login
-- [ ] 8. Remote sync (SSH)
-- [ ] 9. Packaging (.exe / MSIX)
+- [x] **2. Models** — DayAgg, Aggregate, StatsSummary, TimeRange
+- [x] **3. Core** — Parser + StatsEngine + LanguageMap (verified vs real logs)
+- [x] **4. Wiring** — engine load, periodic refresh, tray tooltip, live popover cards
+- [ ] 5. UI tabs (Overview, Languages, Models, Projects, Usage) + charts
+- [ ] 6. Settings window + launch-at-login
+- [ ] 7. Remote sync (SSH)
+- [ ] 8. Packaging (.exe / MSIX)
 
 ## Data source
 

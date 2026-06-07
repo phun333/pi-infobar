@@ -1,8 +1,11 @@
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
 using H.NotifyIcon;
 using PiStats.Assets;
+using PiStats.Core;
 using PiStats.Views;
 
 namespace PiStats;
@@ -11,8 +14,10 @@ public partial class App : Application
 {
     private TaskbarIcon? _tray;
     private PopoverWindow? _popover;
+    private StatsEngine? _engine;
+    private DispatcherTimer? _refreshTimer;
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
@@ -21,18 +26,19 @@ public partial class App : Application
         {
             try
             {
-                var report = Core.Diagnostics.Dump();
-                var outPath = Path.Combine(Path.GetTempPath(), "pistats-dump.txt");
-                File.WriteAllText(outPath, report);
+                var report = Diagnostics.Dump();
+                File.WriteAllText(Path.Combine(Path.GetTempPath(), "pistats-dump.txt"), report);
             }
             catch (Exception ex)
             {
-                File.WriteAllText(Path.Combine(Path.GetTempPath(), "pistats-dump.txt"),
-                    "ERROR: " + ex);
+                File.WriteAllText(Path.Combine(Path.GetTempPath(), "pistats-dump.txt"), "ERROR: " + ex);
             }
             Shutdown();
             return;
         }
+
+        _engine = new StatsEngine();
+        _engine.PropertyChanged += OnEngineChanged;
 
         // Tray icon (the macOS NSStatusItem equivalent).
         _tray = new TaskbarIcon
@@ -43,16 +49,33 @@ public partial class App : Application
         _tray.TrayLeftMouseUp += (_, _) => TogglePopover();
         _tray.TrayRightMouseUp += (_, _) => ShowTrayMenu();
 
-        _popover = new PopoverWindow();
+        _popover = new PopoverWindow(_engine);
+
+        // Initial load + periodic refresh (macOS uses a 300s timer).
+        await _engine.LoadAsync();
+
+        _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(300) };
+        _refreshTimer.Tick += async (_, _) => await _engine.LoadAsync();
+        _refreshTimer.Start();
+    }
+
+    private void OnEngineChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (_engine == null || _tray == null) return;
+        Dispatcher.Invoke(() =>
+        {
+            var today = _engine.TodayCost;
+            _tray.ToolTipText = _engine.Loading
+                ? "Pi Stats — updating…"
+                : $"Pi Stats — ${today:F2} today";
+        });
     }
 
     private void TogglePopover()
     {
         if (_popover == null) return;
-        if (_popover.IsVisible)
-            _popover.HidePopover();
-        else
-            _popover.ShowPopover();
+        if (_popover.IsVisible) _popover.HidePopover();
+        else _popover.ShowPopover();
     }
 
     private void ShowTrayMenu()
@@ -60,12 +83,16 @@ public partial class App : Application
         var menu = new System.Windows.Controls.ContextMenu();
 
         var settings = new System.Windows.Controls.MenuItem { Header = "Settings…" };
-        settings.Click += (_, _) => { /* TODO: settings window */ };
+        settings.Click += (_, _) => { /* TODO: settings window (Step 7) */ };
+
+        var refresh = new System.Windows.Controls.MenuItem { Header = "Refresh" };
+        refresh.Click += async (_, _) => { if (_engine != null) await _engine.LoadAsync(force: true); };
 
         var quit = new System.Windows.Controls.MenuItem { Header = "Quit" };
         quit.Click += (_, _) => Shutdown();
 
         menu.Items.Add(settings);
+        menu.Items.Add(refresh);
         menu.Items.Add(new System.Windows.Controls.Separator());
         menu.Items.Add(quit);
         menu.IsOpen = true;
@@ -73,6 +100,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _refreshTimer?.Stop();
         _tray?.Dispose();
         base.OnExit(e);
     }
