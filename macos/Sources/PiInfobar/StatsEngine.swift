@@ -133,6 +133,9 @@ final class StatsEngine: ObservableObject {
         var projSessions: [String: Set<String>] = [:]
         var toolCount: [String: Int] = [:]
         var spend: [DaySpend] = []
+        // Track session -> (date, project)
+        var sessionDate: [String: String] = [:]
+        var sessionProject: [String: String] = [:]
 
         for d in filtered {
             s.totalCost += d.cost
@@ -140,6 +143,19 @@ final class StatsEngine: ObservableObject {
             s.crTok += d.crTok; s.cwTok += d.cwTok
             s.userMsgs += d.userMsgs; s.asstMsgs += d.asstMsgs
             s.toolResults += d.toolResults
+            // Track session -> date / project
+            for sid in d.sessionIds {
+                if sessionDate[sid] == nil {
+                    sessionDate[sid] = d.date
+                }
+            }
+            for (proj, ids) in d.projectSessions {
+                for sid in ids {
+                    if sessionProject[sid] == nil {
+                        sessionProject[sid] = proj
+                    }
+                }
+            }
             sessionSet.formUnion(d.sessionIds)
             for (k, v) in d.langLines { langLines[k, default: 0] += v }
             for (k, v) in d.langEdits { langEdits[k, default: 0] += v }
@@ -212,6 +228,12 @@ final class StatsEngine: ObservableObject {
         }
 
         s.dailySpend = filledSpend
+
+        // Build sessions list (sorted newest first)
+        s.sessions = sessionDate.map { sid, date in
+            SessionInfo(sessionId: sid, date: date, project: sessionProject[sid] ?? "unknown")
+        }
+        .sorted { $0.date > $1.date }
 
         return s
     }

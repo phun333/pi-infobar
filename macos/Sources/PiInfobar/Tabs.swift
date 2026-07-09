@@ -36,6 +36,11 @@ struct OverviewTab: View {
                 }
             }
 
+            // Sessions list
+            if !s.sessions.isEmpty {
+                SessionListSection(sessions: s.sessions)
+            }
+
             if let top = s.languages.first {
                 VStack(alignment: .leading, spacing: 8) {
                     SectionHeader(title: "Top Language")
@@ -110,6 +115,122 @@ struct DailySpendChart: View {
                     .font(.system(size: 8.5))
             }
         }
+    }
+}
+
+// MARK: - Session list (expandable)
+
+struct SessionListSection: View {
+    let sessions: [SessionInfo]
+    @State private var expanded = false
+    private let previewCount = 8
+
+    private var visibleSessions: [SessionInfo] {
+        expanded ? sessions : Array(sessions.prefix(previewCount))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) { expanded.toggle() }
+            } label: {
+                SectionHeader(
+                    title: "Sessions",
+                    trailing: "\(sessions.count)"
+                )
+            }
+            .buttonStyle(.plain)
+
+            VStack(spacing: 6) {
+                ForEach(visibleSessions) { session in
+                    SessionRow(session: session)
+                }
+            }
+
+            if sessions.count > previewCount && !expanded {
+                Button {
+                    withAnimation(.easeOut(duration: 0.15)) { expanded.toggle() }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 10))
+                        Text("Show all \(sessions.count)")
+                            .font(.system(size: 10.5, weight: .medium))
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 2)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+        )
+    }
+}
+
+struct SessionRow: View {
+    let session: SessionInfo
+    @State private var copied = false
+
+    private var shortId: String {
+        // Show first 8 chars + "..." + last 4 chars
+        if session.sessionId.count > 14 {
+            return String(session.sessionId.prefix(8)) + "…" + String(session.sessionId.suffix(4))
+        }
+        return session.sessionId
+    }
+
+    var body: some View {
+        Button {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(session.sessionId, forType: .string)
+            copied = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                copied = false
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
+                    .font(.system(size: 10))
+                    .foregroundStyle(copied ? .green : .secondary)
+                    .frame(width: 16)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(session.sessionId)
+                        .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .help(session.sessionId + " (click to copy)")
+                    HStack(spacing: 6) {
+                        Label(session.date, systemImage: "calendar")
+                        if session.project != "unknown" {
+                            Label(session.project, systemImage: "folder")
+                        }
+                    }
+                    .font(.system(size: 9.5))
+                    .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "arrowshape.right.circle.fill")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary.opacity(0.5))
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.primary.opacity(0.03))
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 

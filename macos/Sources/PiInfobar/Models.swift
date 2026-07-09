@@ -94,6 +94,13 @@ struct DaySpend: Identifiable {
     let cost: Double
 }
 
+struct SessionInfo: Identifiable {
+    var id: String { sessionId }
+    let sessionId: String
+    let date: String
+    let project: String
+}
+
 // MARK: - Summary for a selected range
 
 struct StatsSummary {
@@ -112,6 +119,7 @@ struct StatsSummary {
     var projects: [ProjectStat] = []
     var tools: [ToolStat] = []
     var dailySpend: [DaySpend] = []
+    var sessions: [SessionInfo] = []
 
     var totalTokens: Int { inTok + outTok + crTok + cwTok }
     var totalMessages: Int { userMsgs + asstMsgs }
