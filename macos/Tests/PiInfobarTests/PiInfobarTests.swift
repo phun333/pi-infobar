@@ -98,4 +98,55 @@ final class PiInfobarTests: XCTestCase {
         let yesterdayStr = f.string(from: cal.date(byAdding: .day, value: -1, to: today)!)
         XCTAssertEqual(spendMap[yesterdayStr], 0.0)
     }
+
+    func testSummarizeSessions() {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let f = StatsEngine.dayFormatter
+        let todayStr = f.string(from: today)
+        let olderStr = f.string(from: cal.date(byAdding: .day, value: -2, to: today)!)
+
+        var older = DayAgg(date: olderStr, cost: 1.0)
+        older.sessionIds = ["sess-A"]
+        older.sessionStart = ["sess-A": 1000]
+        older.sessionEnd = ["sess-A": 1000 + 90 * 60]  // 90 minutes
+        older.sessionPath = ["sess-A": "/tmp/sess-A.jsonl"]
+        older.projectSessions = ["proj-x": ["sess-A"]]
+
+        var newer = DayAgg(date: todayStr, cost: 2.0)
+        // Two sessions on the same day to exercise the tie-breaker
+        newer.sessionIds = ["sess-C", "sess-B"]
+        newer.sessionStart = ["sess-B": 5000, "sess-C": 8000]
+        newer.sessionEnd = ["sess-B": 5000 + 45, "sess-C": 8000]  // B: 45s, C: single msg (0)
+        newer.projectSessions = ["proj-y": ["sess-B", "sess-C"]]
+
+        let summary = StatsEngine.summarize(days: [older, newer], range: .week)
+
+        // All unique sessions are present
+        XCTAssertEqual(summary.sessions.count, 3)
+
+        // Newest first, with sessionId as deterministic tie-breaker within a day
+        XCTAssertEqual(summary.sessions.map { $0.sessionId }, ["sess-B", "sess-C", "sess-A"])
+
+        // Date and project mapping is correct
+        let byId = Dictionary(uniqueKeysWithValues: summary.sessions.map { ($0.sessionId, $0) })
+        XCTAssertEqual(byId["sess-A"]?.date, olderStr)
+        XCTAssertEqual(byId["sess-A"]?.project, "proj-x")
+        XCTAssertEqual(byId["sess-B"]?.date, todayStr)
+        XCTAssertEqual(byId["sess-B"]?.project, "proj-y")
+
+        // Duration derived from first/last activity (0 when only one timestamp)
+        XCTAssertEqual(byId["sess-A"]?.duration, 90 * 60, accuracy: 0.001)
+        XCTAssertEqual(byId["sess-B"]?.duration, 45, accuracy: 0.001)
+        XCTAssertEqual(byId["sess-C"]?.duration, 0, accuracy: 0.001)
+
+        // File path is carried through for reveal-in-Finder
+        XCTAssertEqual(byId["sess-A"]?.filePath, "/tmp/sess-A.jsonl")
+        XCTAssertNil(byId["sess-C"]?.filePath)
+
+        // Sorting is deterministic across repeated runs
+        let summary2 = StatsEngine.summarize(days: [older, newer], range: .week)
+        XCTAssertEqual(summary.sessions.map { $0.sessionId },
+                       summary2.sessions.map { $0.sessionId })
+    }
 }

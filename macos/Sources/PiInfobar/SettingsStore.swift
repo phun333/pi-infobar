@@ -32,6 +32,7 @@ enum SettingsKeys {
     static let menuBarMetric   = "menuBarMetric"
     static let defaultRange    = "defaultRange"
     static let defaultTab      = "defaultTab"
+    static let showSessionList = "showSessionList"
     static let launchAtLogin   = "launchAtLogin"
     static let remoteSyncEnabled = "remoteSyncEnabled"
     static let remoteHost        = "remoteHost"
@@ -56,6 +57,9 @@ enum SettingsStore {
     static var defaultTab: Tab {
         Tab(rawValue: UserDefaults.standard.string(forKey: SettingsKeys.defaultTab) ?? "")
             ?? .overview
+    }
+    static var showSessionList: Bool {
+        UserDefaults.standard.object(forKey: SettingsKeys.showSessionList) as? Bool ?? true
     }
 }
 

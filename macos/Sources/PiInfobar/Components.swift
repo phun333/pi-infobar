@@ -23,6 +23,16 @@ enum Fmt {
         if d >= 1_000 { return String(format: "%.1fK", d / 1e3) }
         return "\(v)"
     }
+    /// Human-friendly session duration, e.g. "2h 15m", "45m", "38s".
+    static func duration(_ seconds: Double) -> String {
+        let s = Int(seconds.rounded())
+        if s < 60 { return "\(s)s" }
+        let m = s / 60
+        if m < 60 { return "\(m)m" }
+        let h = m / 60
+        let rem = m % 60
+        return rem == 0 ? "\(h)h" : "\(h)h \(rem)m"
+    }
 }
 
 // MARK: - Menu-style row (hover highlight + keyboard shortcut hint)

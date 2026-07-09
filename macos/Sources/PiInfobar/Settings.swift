@@ -171,6 +171,7 @@ struct MenuBarPane: View {
 struct GeneralPane: View {
     @AppStorage(SettingsKeys.defaultRange) private var rangeRaw = TimeRange.all.rawValue
     @AppStorage(SettingsKeys.defaultTab) private var tabRaw = Tab.overview.rawValue
+    @AppStorage(SettingsKeys.showSessionList) private var showSessionList = true
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
 
     var body: some View {
@@ -197,6 +198,17 @@ struct GeneralPane: View {
                 Picker("Time range", selection: $rangeRaw) {
                     ForEach(TimeRange.allCases) { r in Text(r.label).tag(r.rawValue) }
                 }
+            }
+
+            Section("Overview") {
+                Toggle(isOn: $showSessionList) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Show session list")
+                        Text("List individual sessions with their UUID, duration and project in the Overview tab.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
             }
         }
         .formStyle(.grouped)
