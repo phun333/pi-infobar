@@ -37,6 +37,9 @@ struct DayAgg: Codable {
     var asstMsgs: Int = 0
     var toolResults: Int = 0
     var sessionIds: [String] = []
+    var sessionStart: [String: Double] = [:]   // sessionId -> earliest ts (epoch seconds)
+    var sessionEnd: [String: Double] = [:]     // sessionId -> latest ts (epoch seconds)
+    var sessionPath: [String: String] = [:]    // sessionId -> source .jsonl file path
     var langLines: [String: Int] = [:]   // language -> lines written
     var langEdits: [String: Int] = [:]   // language -> edit/write count
     var modelCost: [String: Double] = [:]
@@ -94,6 +97,15 @@ struct DaySpend: Identifiable {
     let cost: Double
 }
 
+struct SessionInfo: Identifiable {
+    var id: String { sessionId }
+    let sessionId: String
+    let date: String
+    let project: String
+    let duration: Double   // seconds (0 if unknown / single message)
+    let filePath: String?  // source .jsonl path (for reveal in Finder)
+}
+
 // MARK: - Summary for a selected range
 
 struct StatsSummary {
@@ -112,6 +124,7 @@ struct StatsSummary {
     var projects: [ProjectStat] = []
     var tools: [ToolStat] = []
     var dailySpend: [DaySpend] = []
+    var sessions: [SessionInfo] = []
 
     var totalTokens: Int { inTok + outTok + crTok + cwTok }
     var totalMessages: Int { userMsgs + asstMsgs }

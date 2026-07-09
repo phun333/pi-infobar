@@ -5,6 +5,7 @@ import Charts
 
 struct OverviewTab: View {
     let s: StatsSummary
+    @AppStorage(SettingsKeys.showSessionList) private var showSessionList = true
 
     private let cols = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
 
@@ -34,6 +35,11 @@ struct OverviewTab: View {
                     DailySpendChart(data: s.dailySpend)
                         .frame(height: 150)
                 }
+            }
+
+            // Sessions list
+            if showSessionList && !s.sessions.isEmpty {
+                SessionListSection(sessions: s.sessions)
             }
 
             if let top = s.languages.first {
@@ -110,6 +116,172 @@ struct DailySpendChart: View {
                     .font(.system(size: 8.5))
             }
         }
+    }
+}
+
+// MARK: - Session list (expandable)
+
+struct SessionListSection: View {
+    let sessions: [SessionInfo]
+    @State private var expanded = false
+    private let previewCount = 8
+
+    private var visibleSessions: [SessionInfo] {
+        expanded ? sessions : Array(sessions.prefix(previewCount))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) { expanded.toggle() }
+            } label: {
+                SectionHeader(
+                    title: "Sessions",
+                    trailing: "\(sessions.count)"
+                )
+            }
+            .buttonStyle(.plain)
+
+            VStack(spacing: 6) {
+                ForEach(visibleSessions) { session in
+                    SessionRow(session: session)
+                }
+            }
+
+            if sessions.count > previewCount && !expanded {
+                Button {
+                    withAnimation(.easeOut(duration: 0.15)) { expanded.toggle() }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 10))
+                        Text("Show all \(sessions.count)")
+                            .font(.system(size: 10.5, weight: .medium))
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 2)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+        )
+    }
+}
+
+struct SessionRow: View {
+    let session: SessionInfo
+    @State private var copied = false
+
+    private var canReveal: Bool {
+        guard let p = session.filePath else { return false }
+        return FileManager.default.fileExists(atPath: p)
+    }
+
+    private func copyId() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(session.sessionId, forType: .string)
+        copied = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            copied = false
+        }
+    }
+
+    private func revealInFinder() {
+        guard let p = session.filePath else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: p)])
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            // Main area: reveal the session file in Finder.
+            Button(action: revealInFinder) {
+                HStack(spacing: 8) {
+                    Image(systemName: "doc.text")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 16)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(session.sessionId)
+                            .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        HStack(spacing: 6) {
+                            Label(session.date, systemImage: "calendar")
+                            if session.duration > 0 {
+                                Label(Fmt.duration(session.duration), systemImage: "clock")
+                            }
+                            if session.project != "unknown" {
+                                Label(session.project, systemImage: "folder")
+                            }
+                        }
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!canReveal)
+            .help(canReveal ? "Reveal session file in Finder" : session.sessionId)
+
+            // Dedicated copy button.
+            CopyButton(copied: copied, action: copyId)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color.primary.opacity(0.03))
+        )
+    }
+}
+
+struct CopyButton: View {
+    let copied: Bool
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                    .font(.system(size: 10, weight: .semibold))
+                Text(copied ? "Copied" : "Copy")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .foregroundStyle(copied ? Color.green : (hovering ? Color.accentColor : Color.secondary))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(copied
+                          ? Color.green.opacity(0.12)
+                          : Color.primary.opacity(hovering ? 0.10 : 0.05))
+            )
+            .overlay(
+                Capsule(style: .continuous)
+                    .strokeBorder(copied
+                                  ? Color.green.opacity(0.4)
+                                  : Color.primary.opacity(hovering ? 0.22 : 0.12),
+                                  lineWidth: 1)
+            )
+            .contentShape(Capsule(style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
+        .animation(.easeOut(duration: 0.12), value: copied)
+        .help(copied ? "Copied!" : "Copy session UUID")
     }
 }
 

@@ -14,7 +14,7 @@ with optional SSH sync from your own remote Pi server.
 > The macOS app (SwiftUI) lives in [`macos/`](macos/); the Windows app (WPF)
 > lives in [`windows/`](windows/).
 
-<a href="https://github.com/phun333/pi-infobar/releases/tag/v0.3.0"><img src="https://img.shields.io/badge/download-v0.3.0-4D7CFF?style=flat-square" alt="Download v0.3.0" /></a>
+<a href="https://github.com/phun333/pi-infobar/releases/tag/v0.4.0"><img src="https://img.shields.io/badge/download-v0.4.0-4D7CFF?style=flat-square" alt="Download v0.4.0" /></a>
 <img src="https://img.shields.io/badge/platform-macOS%2014%2B%20%7C%20Windows%2010%2F11-111?style=flat-square" alt="macOS 14+ | Windows 10/11" />
 <img src="https://img.shields.io/badge/built%20with-SwiftUI%20%2B%20WPF-F05138?style=flat-square" alt="SwiftUI + WPF" />
 <img src="https://img.shields.io/badge/privacy-local--first-4EAA25?style=flat-square" alt="local-first" />
@@ -41,6 +41,11 @@ with optional SSH sync from your own remote Pi server.
 
 <br />
 
+## What's New in v0.4.0
+
+- **Session list in Overview** — each session is now listed with its **UUID**, **duration** and **project** folder. Click a row to **reveal the session `.jsonl` file in Finder**, or hit **Copy** to grab its UUID.
+- **Toggle it off** — a new **Settings → General → Show session list** switch lets you hide the per-session list in the Overview tab if you prefer just the summary.
+
 ## Features
 
 - **Cost** — today's spend in the menu bar; total / avg / daily-spend chart (hover any day for its exact spend).
@@ -54,7 +59,7 @@ with optional SSH sync from your own remote Pi server.
 
 ## Download
 
-Grab the latest from the **[v0.3.0 release](https://github.com/phun333/pi-infobar/releases/tag/v0.3.0)**.
+Grab the latest from the **[v0.4.0 release](https://github.com/phun333/pi-infobar/releases/tag/v0.4.0)**.
 
 ### 🤖 macOS
 
@@ -65,7 +70,7 @@ a broken app — you just have to clear the quarantine flag once.
 **Easiest — one-line install.** Paste into **Terminal** (downloads, installs, unquarantines, opens):
 
 ```bash
-curl -L https://github.com/phun333/pi-infobar/releases/download/v0.3.0/Pi-Stats.zip -o /tmp/PiStats.zip && \
+curl -L https://github.com/phun333/pi-infobar/releases/download/v0.4.0/Pi-Stats.zip -o /tmp/PiStats.zip && \
   ditto -xk /tmp/PiStats.zip /Applications && \
   xattr -dr com.apple.quarantine "/Applications/Pi Stats.app" && \
   open "/Applications/Pi Stats.app"
@@ -111,7 +116,7 @@ host to your machine — never out.
 ```bash
 cd macos
 ./build_app.sh && open "build/Pi Stats.app"   # build + run
-./release.sh v0.3.0                            # package DMG/zip + GitHub release
+./release.sh v0.4.0                            # package DMG/zip + GitHub release
 ```
 
 **Windows** — .NET 8 SDK:

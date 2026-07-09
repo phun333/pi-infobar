@@ -112,6 +112,21 @@ extension StatsEngine {
             if !day.sessionIds.contains(sessionId) {
                 day.sessionIds.append(sessionId)
             }
+            // Track first/last activity per session for duration.
+            let ts = date.timeIntervalSince1970
+            if let cur = day.sessionStart[sessionId] {
+                if ts < cur { day.sessionStart[sessionId] = ts }
+            } else {
+                day.sessionStart[sessionId] = ts
+            }
+            if let cur = day.sessionEnd[sessionId] {
+                if ts > cur { day.sessionEnd[sessionId] = ts }
+            } else {
+                day.sessionEnd[sessionId] = ts
+            }
+            if day.sessionPath[sessionId] == nil {
+                day.sessionPath[sessionId] = url.path
+            }
             // Track project sessions.
             var ps = day.projectSessions[project] ?? []
             if !ps.contains(sessionId) { ps.append(sessionId) }

@@ -133,6 +133,13 @@ final class StatsEngine: ObservableObject {
         var projSessions: [String: Set<String>] = [:]
         var toolCount: [String: Int] = [:]
         var spend: [DaySpend] = []
+        // Track session -> (date, project)
+        var sessionDate: [String: String] = [:]
+        var sessionProject: [String: String] = [:]
+        // Track session -> first/last activity (epoch seconds) across days
+        var sessionStart: [String: Double] = [:]
+        var sessionEnd: [String: Double] = [:]
+        var sessionPath: [String: String] = [:]
 
         for d in filtered {
             s.totalCost += d.cost
@@ -140,6 +147,28 @@ final class StatsEngine: ObservableObject {
             s.crTok += d.crTok; s.cwTok += d.cwTok
             s.userMsgs += d.userMsgs; s.asstMsgs += d.asstMsgs
             s.toolResults += d.toolResults
+            // Track session -> date / project
+            for sid in d.sessionIds {
+                if sessionDate[sid] == nil {
+                    sessionDate[sid] = d.date
+                }
+            }
+            for (proj, ids) in d.projectSessions {
+                for sid in ids {
+                    if sessionProject[sid] == nil {
+                        sessionProject[sid] = proj
+                    }
+                }
+            }
+            for (sid, ts) in d.sessionStart {
+                sessionStart[sid] = min(sessionStart[sid] ?? ts, ts)
+            }
+            for (sid, ts) in d.sessionEnd {
+                sessionEnd[sid] = max(sessionEnd[sid] ?? ts, ts)
+            }
+            for (sid, p) in d.sessionPath where sessionPath[sid] == nil {
+                sessionPath[sid] = p
+            }
             sessionSet.formUnion(d.sessionIds)
             for (k, v) in d.langLines { langLines[k, default: 0] += v }
             for (k, v) in d.langEdits { langEdits[k, default: 0] += v }
@@ -212,6 +241,20 @@ final class StatsEngine: ObservableObject {
         }
 
         s.dailySpend = filledSpend
+
+        // Build sessions list (sorted newest first)
+        s.sessions = sessionDate.map { sid, date in
+            let dur: Double
+            if let start = sessionStart[sid], let end = sessionEnd[sid], end > start {
+                dur = end - start
+            } else {
+                dur = 0
+            }
+            return SessionInfo(sessionId: sid, date: date,
+                               project: sessionProject[sid] ?? "unknown", duration: dur,
+                               filePath: sessionPath[sid])
+        }
+        .sorted { $0.date != $1.date ? $0.date > $1.date : $0.sessionId < $1.sessionId }
 
         return s
     }
